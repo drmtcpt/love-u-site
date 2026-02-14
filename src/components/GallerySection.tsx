@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Camera, Heart, Star, Smile, X, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +17,26 @@ const GallerySection = () => {
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
+  const loadGallery = useCallback(async (uid?: string) => {
+    const id = uid || userId;
+    if (!id) return;
+    const { data, error } = await supabase.from<PhotoRow>("photos").select("id, path, filename, created_at").eq("user_id", id).order("created_at", { ascending: false });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    const items = await Promise.all((data || []).map(async (r) => {
+      const { data: fileData, error: dlErr } = await supabase.storage.from("photos").download(r.path);
+      if (dlErr) {
+        console.error(dlErr);
+        return null;
+      }
+      const url = URL.createObjectURL(fileData);
+      return { id: r.id, url, filename: r.filename || undefined };
+    }));
+    setPhotos(items.filter((item): item is { id: string; url: string; filename?: string } => item !== null));
+  }, [userId]);
+
   useEffect(() => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -30,7 +50,7 @@ const GallerySection = () => {
     });
 
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [loadGallery]);
 
   const signIn = async () => {
     if (!email) return alert("Введите email");
@@ -66,26 +86,6 @@ const GallerySection = () => {
       // reset input
       (e.target as HTMLInputElement).value = "";
     }
-  };
-
-  const loadGallery = async (uid?: string) => {
-    const id = uid || userId;
-    if (!id) return;
-    const { data, error } = await supabase.from<PhotoRow>("photos").select("id, path, filename, created_at").eq("user_id", id).order("created_at", { ascending: false });
-    if (error) {
-      console.error(error);
-      return;
-    }
-    const items = await Promise.all((data || []).map(async (r) => {
-      const { data: fileData, error: dlErr } = await supabase.storage.from("photos").download(r.path);
-      if (dlErr) {
-        console.error(dlErr);
-        return null;
-      }
-      const url = URL.createObjectURL(fileData);
-      return { id: r.id, url, filename: r.filename || undefined };
-    }));
-    setPhotos(items.filter((item): item is { id: string; url: string; filename?: string } => item !== null));
   };
 
   return (
