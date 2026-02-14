@@ -78,9 +78,10 @@ const MusicPlayer = () => {
       // reload
       await loadUserMusic(userId);
       alert("Музыка загружена.");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message);
     } finally {
       setLoading(false);
       (e.target as HTMLInputElement).value = "";

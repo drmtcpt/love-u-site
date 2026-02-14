@@ -57,9 +57,10 @@ const GallerySection = () => {
       const { error: dbErr } = await supabase.from("photos").insert([{ user_id: userId, path, filename: file.name }]);
       if (dbErr) throw dbErr;
       await loadGallery(userId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      alert(message);
     } finally {
       setUploading(false);
       // reset input
@@ -84,7 +85,7 @@ const GallerySection = () => {
       const url = URL.createObjectURL(fileData);
       return { id: r.id, url, filename: r.filename || undefined };
     }));
-    setPhotos(items.filter(Boolean) as any);
+    setPhotos(items.filter((item): item is { id: string; url: string; filename?: string } => item !== null));
   };
 
   return (
