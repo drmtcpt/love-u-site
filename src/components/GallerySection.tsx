@@ -115,21 +115,33 @@ const GallerySection = () => {
 
   return (
     <section id="gallery" className="relative z-10 py-20 px-4 sm:px-8">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="font-display text-3xl sm:text-4xl text-center mb-4 glow-text"
-      >
-        📸 Моменты, которые делают нас нами
-      </motion.h2>
-      <p className="text-center text-muted-foreground mb-6 font-body text-sm">
-        Только вы сможете видеть и загружать свои фото.
-      </p>
+      {userId ? (
+        <>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="font-display text-3xl sm:text-4xl text-center mb-4 glow-text"
+          >
+            📸 Моменты, которые делают нас нами
+          </motion.h2>
+          <p className="text-center text-muted-foreground mb-6 font-body text-sm">
+            Только вы сможете видеть и загружать свои фото.
+          </p>
+        </>
+      ) : (
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="font-display text-3xl sm:text-4xl text-center mb-8 glow-text"
+        >
+          Открой нашу историю
+        </motion.h2>
+      )}
 
       {!userId ? (
         <div className="max-w-xs mx-auto flex flex-col gap-3 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
-          <div className="text-center mb-2 font-display text-lg">Вход для своих</div>
           <input 
             value={username} 
             onChange={(e) => setUsername(e.target.value)} 
