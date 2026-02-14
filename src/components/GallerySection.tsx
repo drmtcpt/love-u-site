@@ -31,13 +31,15 @@ const GallerySection = () => {
       return;
     }
     const items = await Promise.all((data || []).map(async (r) => {
-      const { data: fileData, error: dlErr } = await supabase.storage.from("photos").download(r.path);
-      if (dlErr) {
-        console.error(dlErr);
+      // Use signed URL for private bucket
+      const { data: signedUrl, error: signErr } = await supabase.storage
+        .from("photos")
+        .createSignedUrl(r.path, 3600); // 1 hour expiration
+      if (signErr) {
+        console.error(signErr);
         return null;
       }
-      const url = URL.createObjectURL(fileData);
-      return { id: r.id, url, filename: r.filename ? r.filename : undefined };
+      return { id: r.id, url: signedUrl.signedUrl, filename: r.filename ? r.filename : undefined };
     }));
     setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string }>);
   }, [userId]);

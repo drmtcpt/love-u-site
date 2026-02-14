@@ -36,10 +36,12 @@ const MusicPlayer = () => {
       if (list && list.length > 0) {
         // use latest file
         const file = list[list.length - 1];
-        const { data: blob, error: dlErr } = await supabase.storage.from("Music").download(`${id}/${file.name}`);
-        if (dlErr) throw dlErr;
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
+        // Use signed URL for private bucket
+        const { data: signedUrl, error: signErr } = await supabase.storage
+          .from("Music")
+          .createSignedUrl(`${id}/${file.name}`, 3600); // 1 hour expiration
+        if (signErr) throw signErr;
+        setAudioUrl(signedUrl.signedUrl);
       } else {
         // fallback to public file
         setAudioUrl(`/music.mp3`);
