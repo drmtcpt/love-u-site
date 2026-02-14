@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Raleway:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 230 35% 7%;
+    --foreground: 220 20% 90%;
+
+    --card: 230 30% 12%;
+    --card-foreground: 220 20% 90%;
+
+    --popover: 230 30% 12%;
+    --popover-foreground: 220 20% 90%;
+
+    --primary: 280 60% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 340 70% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 230 25% 18%;
+    --muted-foreground: 220 15% 55%;
+
+    --accent: 45 80% 60%;
+    --accent-foreground: 230 35% 7%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 260 30% 25%;
+    --input: 260 30% 25%;
+    --ring: 280 60% 65%;
+
+    --radius: 0.75rem;
+
+    --cosmic-deep: 230 35% 7%;
+    --cosmic-purple: 280 60% 65%;
+    --cosmic-pink: 340 70% 55%;
+    --cosmic-gold: 45 80% 60%;
+    --cosmic-blue: 220 70% 50%;
+    --cosmic-glow: 280 80% 75%;
+
+    --sidebar-background: 230 30% 10%;
+    --sidebar-foreground: 220 20% 90%;
+    --sidebar-primary: 280 60% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 230 25% 18%;
+    --sidebar-accent-foreground: 220 20% 90%;
+    --sidebar-border: 260 30% 25%;
+    --sidebar-ring: 280 60% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Raleway', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', serif;
+  }
+}
+
+/* Animated starfield */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes shootingStar {
+  0% { transform: translateX(0) translateY(0); opacity: 1; }
+  100% { transform: translateX(-300px) translateY(300px); opacity: 0; }
+}
+
+@keyframes floatPetal {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.8; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px hsl(280 80% 75% / 0.6)); }
+  50% { filter: drop-shadow(0 0 20px hsl(280 80% 75% / 0.9)); }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.15); }
+  56% { transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glowLine {
+  0%, 100% { stroke-dashoffset: 0; opacity: 0.6; }
+  50% { stroke-dashoffset: 20; opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(45deg, hsl(280 80% 75%), transparent);
+  box-shadow: 0 0 6px 2px hsl(280 80% 75% / 0.4);
+  animation: shootingStar 1.5s ease-out forwards;
+}
+
+.petal {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(ellipse, hsl(340 70% 65% / 0.7), transparent);
+  border-radius: 50% 0 50% 0;
+  animation: floatPetal var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.heartbeat-hover:hover {
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glow-text {
+  text-shadow: 0 0 20px hsl(280 80% 75% / 0.5), 0 0 40px hsl(340 70% 55% / 0.3);
+}
+
+.cosmic-gradient {
+  background: linear-gradient(135deg, hsl(230 35% 7%), hsl(260 40% 12%), hsl(230 35% 7%));
+}
+
+.glass-effect {
+  background: hsl(230 30% 15% / 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(280 60% 65% / 0.2);
+}
