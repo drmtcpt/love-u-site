@@ -1,39 +1,90 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, Heart, Star, Smile, X, Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-interface Photo {
+interface PhotoRow {
   id: string;
-  url: string;
-  caption: string;
-  reactions: { heart: number; laugh: number; star: number };
+  path: string;
+  filename: string | null;
+  created_at: string;
 }
 
-// Placeholder gallery — will be replaced with Cloud storage later
 const GallerySection = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string }>>([]);
+  const [selected, setSelected] = useState<{ id: string; url: string; filename?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const url = URL.createObjectURL(file);
-    const caption = prompt("Добавь подпись к фото:") || "";
-    setPhotos(prev => [...prev, {
-      id: Date.now().toString(),
-      url,
-      caption,
-      reactions: { heart: 0, laugh: 0, star: 0 },
-    }]);
-    setUploading(false);
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) setUserId(data.session.user.id);
+    };
+    getSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+      if (session?.user?.id) loadGallery(session.user.id);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const signIn = async () => {
+    if (!email) return alert("Введите email");
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) alert(error.message);
+    else alert("Письмо со ссылкой для входа отправлено на вашу почту.");
   };
 
-  const addReaction = (photoId: string, type: "heart" | "laugh" | "star") => {
-    setPhotos(prev => prev.map(p =>
-      p.id === photoId ? { ...p, reactions: { ...p.reactions, [type]: p.reactions[type] + 1 } } : p
-    ));
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setPhotos([]);
+    setUserId(null);
+  };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return alert("Сначала войдите");
+    setUploading(true);
+    try {
+      const path = `${userId}/${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from("photos").upload(path, file);
+      if (upErr) throw upErr;
+      // save metadata
+      const { error: dbErr } = await supabase.from("photos").insert([{ user_id: userId, path, filename: file.name }]);
+      if (dbErr) throw dbErr;
+      await loadGallery(userId);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || String(err));
+    } finally {
+      setUploading(false);
+      // reset input
+      (e.target as HTMLInputElement).value = "";
+    }
+  };
+
+  const loadGallery = async (uid?: string) => {
+    const id = uid || userId;
+    if (!id) return;
+    const { data, error } = await supabase.from<PhotoRow>("photos").select("id, path, filename, created_at").eq("user_id", id).order("created_at", { ascending: false });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    const items = await Promise.all((data || []).map(async (r) => {
+      const { data: fileData, error: dlErr } = await supabase.storage.from("photos").download(r.path);
+      if (dlErr) {
+        console.error(dlErr);
+        return null;
+      }
+      const url = URL.createObjectURL(fileData);
+      return { id: r.id, url, filename: r.filename || undefined };
+    }));
+    setPhotos(items.filter(Boolean) as any);
   };
 
   return (
@@ -46,24 +97,28 @@ const GallerySection = () => {
       >
         📸 Моменты, которые делают нас нами
       </motion.h2>
-      <p className="text-center text-muted-foreground mb-12 font-body text-sm">
-        Загружай фото — они сохранятся для нас двоих
+      <p className="text-center text-muted-foreground mb-6 font-body text-sm">
+        Только вы сможете видеть и загружать свои фото — войдите по email.
       </p>
 
+      {!userId ? (
+        <div className="max-w-md mx-auto flex gap-2">
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email вашей девушки" className="input" />
+          <button onClick={signIn} className="btn">Войти</button>
+        </div>
+      ) : (
+        <div className="max-w-md mx-auto flex gap-2 justify-center items-center mb-6">
+          <div className="text-sm">Вы вошли как <strong>{userId.slice(0,8)}</strong></div>
+          <button onClick={signOut} className="btn">Выйти</button>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {photos.map((photo, i) => (
-          <motion.div
-            key={photo.id}
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect"
-            onClick={() => setSelectedPhoto(photo)}
-          >
-            <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
+        {photos.map((p, i) => (
+          <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect" onClick={() => setSelected(p)}>
+            <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-              <p className="text-xs text-foreground font-body">{photo.caption}</p>
+              <p className="text-xs text-foreground font-body">{p.filename}</p>
             </div>
           </motion.div>
         ))}
@@ -71,45 +126,19 @@ const GallerySection = () => {
         <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors">
           <Plus className="text-primary/60 mb-2" size={32} />
           <span className="text-xs text-muted-foreground">Добавить фото</span>
-          <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+          <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
         </label>
       </div>
 
       {/* Lightbox */}
-      {selectedPhoto && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4"
-          onClick={() => setSelectedPhoto(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className="relative max-w-lg w-full glass-effect rounded-2xl p-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground" onClick={() => setSelectedPhoto(null)}>
+      {selected && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
+            <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground" onClick={() => setSelected(null)}>
               <X size={20} />
             </button>
-            <img src={selectedPhoto.url} alt={selectedPhoto.caption} className="w-full rounded-xl mb-4" />
-            <p className="font-display italic text-center text-lg mb-4">{selectedPhoto.caption}</p>
-            <div className="flex justify-center gap-6">
-              {[
-                { type: "heart" as const, icon: Heart, count: selectedPhoto.reactions.heart },
-                { type: "laugh" as const, icon: Smile, count: selectedPhoto.reactions.laugh },
-                { type: "star" as const, icon: Star, count: selectedPhoto.reactions.star },
-              ].map(r => (
-                <button
-                  key={r.type}
-                  onClick={() => addReaction(selectedPhoto.id, r.type)}
-                  className="flex items-center gap-1 text-muted-foreground hover:text-accent transition-colors"
-                >
-                  <r.icon size={18} />
-                  <span className="text-sm">{r.count}</span>
-                </button>
-              ))}
-            </div>
+            <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4" />
+            <p className="font-display italic text-center text-lg mb-4">{selected.filename}</p>
           </motion.div>
         </motion.div>
       )}
