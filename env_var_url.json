@@ -1,0 +1,6 @@
+{
+  "key": "VITE_SUPABASE_URL",
+  "value": "https://hxuwnevxsyqdskzqalxu.supabase.co",
+  "type": "plaintext",
+  "target": ["production"]
+}

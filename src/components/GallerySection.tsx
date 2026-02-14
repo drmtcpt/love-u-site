@@ -1,6 +1,8 @@
+// c:\Users\Ali\Desktop\Love u\src\components\GallerySection.tsx
+
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { X, Plus } from "lucide-react";
+import { X, Plus, LogIn } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface PhotoRow {
@@ -14,7 +16,10 @@ const GallerySection = () => {
   const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string }>>([]);
   const [selected, setSelected] = useState<{ id: string; url: string; filename?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [email, setEmail] = useState("");
+  
+  // Auth states
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
   const loadGallery = useCallback(async (uid?: string) => {
@@ -60,16 +65,29 @@ const GallerySection = () => {
   }, [loadGallery]);
 
   const signIn = async () => {
-    if (!email) return alert("Введите email");
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) alert(error.message);
-    else alert("Письмо со ссылкой для входа отправлено на вашу почту.");
+    if (!username || !password) return alert("Введите логин и пароль");
+    
+    // Автоматически добавляем домен, если введен просто логин
+    const emailToUse = username.includes("@") ? username : `${username}@love-u.site`;
+
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email: emailToUse, 
+      password 
+    });
+
+    if (error) {
+      alert("Ошибка входа: " + error.message);
+    } else {
+      setPassword(""); // Очищаем пароль после успешного входа
+    }
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setPhotos([]);
     setUserId(null);
+    setUsername("");
+    setPassword("");
   };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,46 +124,70 @@ const GallerySection = () => {
         📸 Моменты, которые делают нас нами
       </motion.h2>
       <p className="text-center text-muted-foreground mb-6 font-body text-sm">
-        Только вы сможете видеть и загружать свои фото — войдите по email.
+        Только вы сможете видеть и загружать свои фото.
       </p>
 
       {!userId ? (
-        <div className="max-w-md mx-auto flex gap-2">
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email вашей девушки" className="input" />
-          <button onClick={signIn} className="btn">Войти</button>
+        <div className="max-w-xs mx-auto flex flex-col gap-3 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+          <div className="text-center mb-2 font-display text-lg">Вход для своих</div>
+          <input 
+            value={username} 
+            onChange={(e) => setUsername(e.target.value)} 
+            placeholder="Логин (semya1618)" 
+            className="input bg-black/20 border-white/10 text-center" 
+          />
+          <input 
+            type="password"
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            placeholder="Пароль" 
+            className="input bg-black/20 border-white/10 text-center" 
+          />
+          <button onClick={signIn} className="btn w-full flex justify-center items-center gap-2 mt-2">
+            <LogIn size={18} />
+            Войти
+          </button>
         </div>
       ) : (
         <div className="max-w-md mx-auto flex gap-2 justify-center items-center mb-6">
-          <div className="text-sm">Вы вошли как <strong>{userId.slice(0,8)}</strong></div>
-          <button onClick={signOut} className="btn">Выйти</button>
+          <div className="text-sm">Вы вошли как <strong>{username || "semya1618"}</strong></div>
+          <button onClick={signOut} className="btn bg-red-500/20 hover:bg-red-500/40 border-red-500/50">Выйти</button>
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {photos.map((p, i) => (
-          <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect" onClick={() => setSelected(p)}>
-            <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-              <p className="text-xs text-foreground font-body">{p.filename}</p>
-            </div>
-          </motion.div>
-        ))}
+      {userId && (
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8">
+          {photos.map((p, i) => (
+            <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect" onClick={() => setSelected(p)}>
+              <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                <p className="text-xs text-foreground font-body">{p.filename}</p>
+              </div>
+            </motion.div>
+          ))}
 
-        <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors">
-          <Plus className="text-primary/60 mb-2" size={32} />
-          <span className="text-xs text-muted-foreground">Добавить фото</span>
-          <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
-        </label>
-      </div>
+          <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors bg-white/5">
+            {uploading ? (
+              <span className="loading loading-spinner loading-md text-primary"></span>
+            ) : (
+              <>
+                <Plus className="text-primary/60 mb-2" size={32} />
+                <span className="text-xs text-muted-foreground">Добавить фото</span>
+              </>
+            )}
+            <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+          </label>
+        </div>
+      )}
 
       {/* Lightbox */}
       {selected && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
-            <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground" onClick={() => setSelected(null)}>
+            <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
               <X size={20} />
             </button>
-            <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4" />
+            <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
             <p className="font-display italic text-center text-lg mb-4">{selected.filename}</p>
           </motion.div>
         </motion.div>
