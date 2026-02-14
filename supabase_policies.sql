@@ -56,3 +56,6 @@ USING (lower(bucket_id) = 'music');
 CREATE POLICY "Allow authenticated uploads to Music" ON storage.objects
 FOR INSERT TO authenticated
 WITH CHECK (lower(bucket_id) = 'music');
+
+-- 4. Добавляем колонку для подписей (выполни это в SQL Editor)
+ALTER TABLE public.photos ADD COLUMN IF NOT EXISTS caption text;

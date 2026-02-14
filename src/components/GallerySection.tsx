@@ -9,13 +9,15 @@ interface PhotoRow {
   id: string;
   path: string;
   filename: string | null;
+  caption: string | null;
   created_at: string;
 }
 
 const GallerySection = () => {
-  const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string }>>([]);
-  const [selected, setSelected] = useState<{ id: string; url: string; filename?: string } | null>(null);
+  const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string; caption?: string | null }>>([]);
+  const [selected, setSelected] = useState<{ id: string; url: string; filename?: string; caption?: string | null } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [captionText, setCaptionText] = useState("");
   
   // Auth states
   const [username, setUsername] = useState("");
@@ -27,7 +29,7 @@ const GallerySection = () => {
     if (!id) return;
     const { data, error } = await supabase
       .from("photos")
-      .select("id, path, filename, created_at")
+      .select("id, path, filename, caption, created_at")
       .eq("user_id", id)
       .order("created_at", { ascending: false })
       .returns<PhotoRow[]>();
@@ -44,9 +46,9 @@ const GallerySection = () => {
         console.error(signErr);
         return null;
       }
-      return { id: r.id, url: signedUrl.signedUrl, filename: r.filename ? r.filename : undefined };
+      return { id: r.id, url: signedUrl.signedUrl, filename: r.filename ? r.filename : undefined, caption: r.caption };
     }));
-    setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string }>);
+    setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string; caption?: string | null }>);
   }, [userId]);
 
   useEffect(() => {
@@ -99,7 +101,7 @@ const GallerySection = () => {
       const { error: upErr } = await supabase.storage.from("photos").upload(path, file);
       if (upErr) throw upErr;
       // save metadata
-      const { error: dbErr } = await supabase.from("photos").insert([{ user_id: userId, path, filename: file.name }]);
+      const { error: dbErr } = await supabase.from("photos").insert([{ user_id: userId, path, filename: file.name, caption: captionText }]);
       if (dbErr) throw dbErr;
       await loadGallery(userId);
     } catch (err: unknown) {
@@ -110,6 +112,7 @@ const GallerySection = () => {
       setUploading(false);
       // reset input
       (e.target as HTMLInputElement).value = "";
+      setCaptionText("");
     }
   };
 
@@ -168,12 +171,12 @@ const GallerySection = () => {
       )}
 
       {userId && (
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 auto-rows-fr">
           {photos.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect" onClick={() => setSelected(p)}>
               <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                <p className="text-xs text-foreground font-body">{p.filename}</p>
+                <p className="text-sm text-white font-body line-clamp-2">{p.caption || p.filename}</p>
               </div>
             </motion.div>
           ))}
@@ -184,7 +187,14 @@ const GallerySection = () => {
             ) : (
               <>
                 <Plus className="text-primary/60 mb-2" size={32} />
-                <span className="text-xs text-muted-foreground">Добавить фото</span>
+                <span className="text-xs text-muted-foreground mb-2">Добавить фото</span>
+                <input 
+                  value={captionText}
+                  onChange={(e) => setCaptionText(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Подпись..." 
+                  className="bg-black/20 border-none text-center text-xs w-3/4 rounded px-2 py-1 focus:ring-1 focus:ring-primary/50 outline-none placeholder:text-white/20"
+                />
               </>
             )}
             <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
@@ -200,7 +210,7 @@ const GallerySection = () => {
               <X size={20} />
             </button>
             <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
-            <p className="font-display italic text-center text-lg mb-4">{selected.filename}</p>
+            <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
           </motion.div>
         </motion.div>
       )}
