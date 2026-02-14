@@ -9,6 +9,16 @@ CREATE TABLE IF NOT EXISTS public.photos (
   created_at timestamptz DEFAULT now()
 );
 
+-- 0. Сброс старых политик (чтобы избежать ошибок "policy already exists")
+-- Теперь это безопасно, так как таблица точно существует
+DROP POLICY IF EXISTS "Users can view own photos" ON public.photos;
+DROP POLICY IF EXISTS "Users can insert own photos" ON public.photos;
+DROP POLICY IF EXISTS "Users can delete own photos" ON public.photos;
+DROP POLICY IF EXISTS "Allow authenticated uploads to photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated downloads from photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated to read Music" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated uploads to Music" ON storage.objects;
+
 -- 2. Включаем защиту (RLS) для таблицы photos
 ALTER TABLE public.photos ENABLE ROW LEVEL SECURITY;
 
@@ -30,14 +40,19 @@ FOR DELETE TO authenticated USING (auth.uid() = user_id);
 -- Разрешить загрузку в бакет 'photos', если папка совпадает с ID пользователя
 CREATE POLICY "Allow authenticated uploads to photos" ON storage.objects
 FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+WITH CHECK (lower(bucket_id) = 'photos' AND name LIKE (auth.uid() || '/%'));
 
 -- Разрешить просмотр файлов в бакете 'photos' (своих)
 CREATE POLICY "Allow authenticated downloads from photos" ON storage.objects
 FOR SELECT TO authenticated
-USING (bucket_id = 'photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+USING (lower(bucket_id) = 'photos' AND name LIKE (auth.uid() || '/%'));
 
 -- Разрешить прослушивание музыки из бакета 'Music' (всем авторизованным)
 CREATE POLICY "Allow authenticated to read Music" ON storage.objects
 FOR SELECT TO authenticated
-USING (bucket_id = 'Music');
+USING (lower(bucket_id) = 'music');
+
+-- Разрешить загрузку музыки в бакет 'Music' (всем авторизованным)
+CREATE POLICY "Allow authenticated uploads to Music" ON storage.objects
+FOR INSERT TO authenticated
+WITH CHECK (lower(bucket_id) = 'music');
