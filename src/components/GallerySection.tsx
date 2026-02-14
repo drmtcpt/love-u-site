@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Camera, Heart, Star, Smile, X, Plus } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface PhotoRow {
@@ -20,7 +20,12 @@ const GallerySection = () => {
   const loadGallery = useCallback(async (uid?: string) => {
     const id = uid || userId;
     if (!id) return;
-    const { data, error } = await supabase.from<PhotoRow>("photos").select("id, path, filename, created_at").eq("user_id", id).order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("photos")
+      .select("id, path, filename, created_at")
+      .eq("user_id", id)
+      .order("created_at", { ascending: false })
+      .returns<PhotoRow[]>();
     if (error) {
       console.error(error);
       return;
@@ -32,9 +37,9 @@ const GallerySection = () => {
         return null;
       }
       const url = URL.createObjectURL(fileData);
-      return { id: r.id, url, filename: r.filename || undefined };
+      return { id: r.id, url, filename: r.filename ? r.filename : undefined };
     }));
-    setPhotos(items.filter((item): item is { id: string; url: string; filename?: string } => item !== null));
+    setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string }>);
   }, [userId]);
 
   useEffect(() => {
