@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Используем предоставленные ключи
-const SUPABASE_URL = 'https://hxuwnevxsyqdskzqalxu.supabase.co';
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4dXduZXZ4c3lxZHNrenFhbHh1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA3NzcyNSwiZXhwIjoyMDg2NjUzNzI1fQ.OGHXvN-9BleWz1UyHfPzWxhQ5mp849LT3GP2OeQEm_I';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://hxuwnevxsyqdskzqalxu.supabase.co';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'PLACEHOLDER_KEY_DO_NOT_COMMIT';
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
