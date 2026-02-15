@@ -1,6 +1,7 @@
 // c:\Users\Ali\Desktop\Love u\src\components\GallerySection.tsx
 
 import { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, LogIn, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -232,12 +233,12 @@ const GallerySection = () => {
 
       {/* Upload Modal */}
       <AnimatePresence>
-        {previewFile && previewUrl && (
+        {previewFile && previewUrl && createPortal(
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/90 p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} 
@@ -282,14 +283,15 @@ const GallerySection = () => {
                 )}
               </button>
             </motion.div>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
 
       {/* Lightbox */}
       <AnimatePresence>
-        {selected && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
+        {selected && createPortal(
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
               <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
@@ -297,7 +299,8 @@ const GallerySection = () => {
               <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
               <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
             </motion.div>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
     </section>
