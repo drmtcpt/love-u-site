@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 const MapSection = () => {
-  const [hovered, setHovered] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <section className="relative z-10 py-20 px-4">
@@ -19,9 +19,8 @@ const MapSection = () => {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        className="max-w-2xl mx-auto relative"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        className="max-w-2xl mx-auto relative cursor-pointer"
+        onClick={() => setShowInfo(!showInfo)}
       >
         <svg viewBox="0 0 600 300" className="w-full" xmlns="http://www.w3.org/2000/svg">
           {/* Background shape */}
@@ -63,7 +62,7 @@ const MapSection = () => {
 
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: hovered ? 1 : 0 }}
+          animate={{ opacity: showInfo ? 1 : 0 }}
           className="absolute inset-0 flex items-center justify-center"
         >
           <div className="glass-effect rounded-2xl px-6 py-4 text-center max-w-xs">
