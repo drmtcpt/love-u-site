@@ -1,7 +1,6 @@
 // c:\Users\Ali\Desktop\Love u\src\components\GallerySection.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, LogIn, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -28,18 +27,6 @@ const GallerySection = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-
-  // Блокировка прокрутки страницы при открытом модальном окне
-  useEffect(() => {
-    if (selected || (previewFile && previewUrl)) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [selected, previewFile, previewUrl]);
 
   const loadGallery = useCallback(async (uid?: string) => {
     const id = uid || userId;
@@ -158,8 +145,10 @@ const GallerySection = () => {
     setCaptionText("");
   };
 
+  const isModalOpen = selected || (previewFile && previewUrl);
+
   return (
-    <section id="gallery" className="relative z-10 py-20 px-4 sm:px-8">
+    <section id="gallery" className={`relative py-20 px-4 sm:px-8 ${isModalOpen ? "z-[100]" : "z-10"}`}>
       {userId ? (
         <>
           <motion.h2
@@ -233,12 +222,12 @@ const GallerySection = () => {
 
       {/* Upload Modal */}
       <AnimatePresence>
-        {previewFile && previewUrl && createPortal(
+        {previewFile && previewUrl && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/90 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} 
@@ -283,15 +272,14 @@ const GallerySection = () => {
                 )}
               </button>
             </motion.div>
-          </motion.div>,
-          document.body
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Lightbox */}
       <AnimatePresence>
-        {selected && createPortal(
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
+        {selected && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
               <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
@@ -299,8 +287,7 @@ const GallerySection = () => {
               <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
               <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
             </motion.div>
-          </motion.div>,
-          document.body
+          </motion.div>
         )}
       </AnimatePresence>
     </section>
