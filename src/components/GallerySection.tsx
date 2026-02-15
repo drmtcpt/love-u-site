@@ -1,8 +1,8 @@
 // c:\Users\Ali\Desktop\Love u\src\components\GallerySection.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { X, Plus, LogIn } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Plus, LogIn, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface PhotoRow {
@@ -17,6 +17,10 @@ const GallerySection = () => {
   const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string; caption?: string | null }>>([]);
   const [selected, setSelected] = useState<{ id: string; url: string; filename?: string; caption?: string | null } | null>(null);
   const [uploading, setUploading] = useState(false);
+  
+  // Upload preview state
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [captionText, setCaptionText] = useState("");
   
   // Auth states
@@ -92,28 +96,47 @@ const GallerySection = () => {
     setPassword("");
   };
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !userId) return alert("Сначала войдите");
+    if (!file || !userId) return;
+    setPreviewFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    // Reset input so same file can be selected again if needed
+    e.target.value = "";
+  };
+
+  const handleUpload = async () => {
+    if (!previewFile || !userId) return;
     setUploading(true);
     try {
-      const path = `${userId}/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from("photos").upload(path, file);
+      const path = `${userId}/${Date.now()}_${previewFile.name}`;
+      const { error: upErr } = await supabase.storage.from("photos").upload(path, previewFile);
       if (upErr) throw upErr;
       // save metadata
-      const { error: dbErr } = await supabase.from("photos").insert([{ user_id: userId, path, filename: file.name, caption: captionText }]);
+      const { error: dbErr } = await supabase.from("photos").insert([{ 
+        user_id: userId, 
+        path, 
+        filename: previewFile.name, 
+        caption: captionText 
+      }]);
       if (dbErr) throw dbErr;
+      
       await loadGallery(userId);
+      closeUploadModal();
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : String(err);
       alert(message);
     } finally {
       setUploading(false);
-      // reset input
-      (e.target as HTMLInputElement).value = "";
-      setCaptionText("");
     }
+  };
+
+  const closeUploadModal = () => {
+    setPreviewFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setCaptionText("");
   };
 
   return (
@@ -181,39 +204,84 @@ const GallerySection = () => {
             </motion.div>
           ))}
 
-          <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors bg-white/5">
-            {uploading ? (
-              <span className="loading loading-spinner loading-md text-primary"></span>
-            ) : (
-              <>
-                <Plus className="text-primary/60 mb-2" size={32} />
-                <span className="text-xs text-muted-foreground mb-2">Добавить фото</span>
-                <input 
-                  value={captionText}
-                  onChange={(e) => setCaptionText(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="Подпись..." 
-                  className="bg-black/20 border-none text-center text-xs w-3/4 rounded px-2 py-1 focus:ring-1 focus:ring-primary/50 outline-none placeholder:text-white/20"
-                />
-              </>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+          <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors bg-white/5 group">
+            <Plus className="text-primary/60 mb-2 group-hover:scale-110 transition-transform" size={32} />
+            <span className="text-xs text-muted-foreground">Добавить фото</span>
+            <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
           </label>
         </div>
       )}
 
-      {/* Lightbox */}
-      {selected && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
-            <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
-              <X size={20} />
-            </button>
-            <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
-            <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {previewFile && previewUrl && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} 
+              animate={{ scale: 1, y: 0 }} 
+              exit={{ scale: 0.9, y: 20 }}
+              className="relative max-w-md w-full glass-effect rounded-2xl p-6 flex flex-col gap-4"
+            >
+              <button 
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground" 
+                onClick={closeUploadModal}
+                disabled={uploading}
+              >
+                <X size={20} />
+              </button>
+              
+              <h3 className="text-xl font-display text-center">Новое фото</h3>
+              
+              <div className="rounded-xl overflow-hidden aspect-square bg-black/20">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+              </div>
+
+              <input 
+                value={captionText}
+                onChange={(e) => setCaptionText(e.target.value)}
+                placeholder="Добавь подпись..." 
+                className="input bg-black/20 border-white/10 text-center"
+                disabled={uploading}
+              />
+
+              <button 
+                onClick={handleUpload} 
+                disabled={uploading}
+                className="btn w-full flex justify-center items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {uploading ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Опубликовать
+                  </>
+                )}
+              </button>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
+              <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
+                <X size={20} />
+              </button>
+              <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
+              <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
