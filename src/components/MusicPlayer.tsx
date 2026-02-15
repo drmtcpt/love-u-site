@@ -27,6 +27,12 @@ const MusicPlayer = () => {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (playing && audioRef.current) {
+      audioRef.current.play().catch((e) => console.error(e));
+    }
+  }, [audioUrl]);
+
   const loadUserMusic = async (id: string) => {
     setLoading(true);
     try {

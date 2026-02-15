@@ -125,7 +125,13 @@ const GallerySection = () => {
       closeUploadModal();
     } catch (err: unknown) {
       console.error(err);
-      const message = err instanceof Error ? err.message : String(err);
+      let message = "Произошла ошибка при загрузке";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "object" && err !== null) {
+        const e = err as { message?: string; error_description?: string };
+        message = e.message || e.error_description || JSON.stringify(err);
+      }
       alert(message);
     } finally {
       setUploading(false);
