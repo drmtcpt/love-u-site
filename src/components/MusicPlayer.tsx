@@ -40,9 +40,10 @@ const MusicPlayer = () => {
       const { data: list, error: listErr } = await supabase.storage.from("Music").list(id);
       if (listErr) throw listErr;
       if (list && list.length > 0) {
-        // use latest file
-        const file = list[list.length - 1];
-        // Use signed URL for private bucket
+        // Сортируем файлы, чтобы взять самый новый (по имени, так как оно начинается с timestamp)
+        list.sort((a, b) => b.name.localeCompare(a.name));
+        const file = list[0];
+        
         const { data: signedUrl, error: signErr } = await supabase.storage
           .from("Music")
           .createSignedUrl(`${id}/${file.name}`, 3600); // 1 hour expiration
@@ -80,11 +81,19 @@ const MusicPlayer = () => {
     if (!userId) return alert("Сначала войдите через галерею (email).");
     setLoading(true);
     try {
-      const path = `${userId}/${Date.now()}_${file.name}`;
+      const fileName = `${Date.now()}_${file.name}`;
+      const path = `${userId}/${fileName}`;
       const { error } = await supabase.storage.from("Music").upload(path, file, { upsert: true });
       if (error) throw error;
-      // reload
-      await loadUserMusic(userId);
+      
+      // Сразу получаем ссылку на новый файл и включаем его
+      const { data: signedUrl, error: signErr } = await supabase.storage
+        .from("Music")
+        .createSignedUrl(path, 3600);
+      if (signErr) throw signErr;
+
+      setAudioUrl(signedUrl.signedUrl);
+      setPlaying(true); // Автоматически включаем новую песню
       alert("Музыка загружена.");
     } catch (err: unknown) {
       console.error(err);
