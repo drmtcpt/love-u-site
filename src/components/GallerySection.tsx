@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, LogIn, Send } from "lucide-react";
+import { X, Plus, LogIn, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface PhotoRow {
@@ -14,14 +14,15 @@ interface PhotoRow {
 }
 
 const GallerySection = () => {
-  const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string; caption?: string | null }>>([]);
-  const [selected, setSelected] = useState<{ id: string; url: string; filename?: string; caption?: string | null } | null>(null);
+  const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string; caption?: string | null; path: string }>>([]);
+  const [selected, setSelected] = useState<{ id: string; url: string; filename?: string; caption?: string | null; path: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   
   // Upload preview state
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [captionText, setCaptionText] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Auth states
   const [username, setUsername] = useState("");
@@ -50,9 +51,9 @@ const GallerySection = () => {
         console.error(signErr);
         return null;
       }
-      return { id: r.id, url: signedUrl.signedUrl, filename: r.filename ? r.filename : undefined, caption: r.caption };
+      return { id: r.id, url: signedUrl.signedUrl, filename: r.filename ? r.filename : undefined, caption: r.caption, path: r.path };
     }));
-    setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string; caption?: string | null }>);
+    setPhotos(items.filter((item) => item !== null) as Array<{ id: string; url: string; filename?: string; caption?: string | null; path: string }>);
   }, [userId]);
 
   useEffect(() => {
@@ -145,7 +146,27 @@ const GallerySection = () => {
     setCaptionText("");
   };
 
-  const isModalOpen = selected || (previewFile && previewUrl);
+  const handleDelete = async () => {
+    if (!selected || !userId) return;
+    try {
+      // 1. Удаляем файл из хранилища
+      const { error: storageError } = await supabase.storage.from("photos").remove([selected.path]);
+      if (storageError) throw storageError;
+
+      // 2. Удаляем запись из базы данных
+      const { error: dbError } = await supabase.from("photos").delete().eq("id", selected.id);
+      if (dbError) throw dbError;
+
+      setShowDeleteConfirm(false);
+      setSelected(null);
+      await loadGallery(userId);
+    } catch (err) {
+      console.error(err);
+      alert("Не удалось удалить фото. Попробуйте еще раз.");
+    }
+  };
+
+  const isModalOpen = selected || (previewFile && previewUrl) || showDeleteConfirm;
 
   return (
     <section id="gallery" className={`relative py-20 px-4 sm:px-8 ${isModalOpen ? "z-[100]" : "z-10"}`}>
@@ -281,11 +302,29 @@ const GallerySection = () => {
         {selected && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
+              <button className="absolute top-3 left-3 text-muted-foreground hover:text-red-500 bg-black/50 rounded-full p-2 transition-colors" onClick={() => setShowDeleteConfirm(true)}>
+                <Trash2 size={20} />
+              </button>
               <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
               </button>
               <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
               <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-background border border-white/10 p-6 rounded-xl max-w-sm w-full text-center shadow-2xl">
+              <h3 className="text-lg font-bold mb-6 font-display">Вы точно хотите удалить это воспоминание?</h3>
+              <div className="flex justify-center gap-4">
+                <button onClick={handleDelete} className="btn bg-red-500 hover:bg-red-600 text-white border-none px-6">Да</button>
+                <button onClick={() => setShowDeleteConfirm(false)} className="btn bg-secondary hover:bg-secondary/80 text-white border-none px-6">Нет</button>
+              </div>
             </motion.div>
           </motion.div>
         )}
