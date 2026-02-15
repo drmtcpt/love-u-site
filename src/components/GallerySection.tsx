@@ -28,6 +28,18 @@ const GallerySection = () => {
   const [password, setPassword] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Блокировка прокрутки страницы при открытом модальном окне
+  useEffect(() => {
+    if (selected || (previewFile && previewUrl)) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [selected, previewFile, previewUrl]);
+
   const loadGallery = useCallback(async (uid?: string) => {
     const id = uid || userId;
     if (!id) return;
@@ -225,7 +237,7 @@ const GallerySection = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 p-4"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} 
@@ -277,7 +289,7 @@ const GallerySection = () => {
       {/* Lightbox */}
       <AnimatePresence>
         {selected && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
               <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
