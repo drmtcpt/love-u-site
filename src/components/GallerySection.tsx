@@ -322,11 +322,11 @@ const GallerySection = () => {
       <AnimatePresence>
         {selected && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4" onClick={() => setSelected(null)}>
-            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl p-4" onClick={e => e.stopPropagation()}>
-              <button className="absolute top-3 left-3 text-muted-foreground hover:text-red-500 bg-black/50 rounded-full p-2 transition-colors" onClick={() => setShowDeleteConfirm(true)}>
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }} className="relative max-w-lg w-full glass-effect rounded-2xl px-4 pb-4 pt-14" onClick={e => e.stopPropagation()}>
+              <button className="absolute top-3 left-3 z-10 text-muted-foreground hover:text-red-500 bg-black/50 rounded-full p-2 transition-colors" onClick={() => setShowDeleteConfirm(true)}>
                 <Trash2 size={20} />
               </button>
-              <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
+              <button className="absolute top-3 right-3 z-10 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
               </button>
               {isVideo(selected.filename) ? (
