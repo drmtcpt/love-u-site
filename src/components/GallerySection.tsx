@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, LogIn, Send, Trash2 } from "lucide-react";
+import { X, Plus, LogIn, Send, Trash2, Play } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface PhotoRow {
@@ -12,6 +12,12 @@ interface PhotoRow {
   caption: string | null;
   created_at: string;
 }
+
+const isVideo = (filename: string | null | undefined) => {
+  if (!filename) return false;
+  const ext = filename.split('.').pop()?.toLowerCase();
+  return ['mp4', 'webm', 'ogg', 'mov'].includes(ext || '');
+};
 
 const GallerySection = () => {
   const [photos, setPhotos] = useState<Array<{ id: string; url: string; filename?: string; caption?: string | null; path: string }>>([]);
@@ -226,7 +232,18 @@ const GallerySection = () => {
         <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 auto-rows-fr">
           {photos.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square glass-effect" onClick={() => setSelected(p)}>
-              <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
+              {isVideo(p.filename) ? (
+                <video src={p.url} className="w-full h-full object-cover" />
+              ) : (
+                <img src={p.url} alt={p.filename} className="w-full h-full object-cover" />
+              )}
+              {isVideo(p.filename) && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-black/30 rounded-full p-2 backdrop-blur-sm">
+                    <Play size={24} className="text-white fill-white" />
+                  </div>
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                 <p className="text-sm text-white font-body line-clamp-2">{p.caption || p.filename}</p>
               </div>
@@ -235,8 +252,8 @@ const GallerySection = () => {
 
           <label className="flex flex-col items-center justify-center rounded-xl aspect-square border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/60 transition-colors bg-white/5 group">
             <Plus className="text-primary/60 mb-2 group-hover:scale-110 transition-transform" size={32} />
-            <span className="text-xs text-muted-foreground">Добавить фото</span>
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+            <span className="text-xs text-muted-foreground">Добавить фото/видео</span>
+            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
           </label>
         </div>
       )}
@@ -264,10 +281,14 @@ const GallerySection = () => {
                 <X size={20} />
               </button>
               
-              <h3 className="text-xl font-display text-center">Новое фото</h3>
+              <h3 className="text-xl font-display text-center">Новая публикация</h3>
               
               <div className="rounded-xl overflow-hidden aspect-square bg-black/20">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+                {previewFile.type.startsWith('video/') ? (
+                  <video src={previewUrl} className="w-full h-full object-contain" controls />
+                ) : (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+                )}
               </div>
 
               <input 
@@ -308,7 +329,11 @@ const GallerySection = () => {
               <button className="absolute top-3 right-3 text-muted-foreground hover:text-foreground bg-black/50 rounded-full p-1" onClick={() => setSelected(null)}>
                 <X size={20} />
               </button>
-              <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
+              {isVideo(selected.filename) ? (
+                <video src={selected.url} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" controls autoPlay />
+              ) : (
+                <img src={selected.url} alt={selected.filename} className="w-full rounded-xl mb-4 max-h-[80vh] object-contain" />
+              )}
               <p className="font-display italic text-center text-lg mb-4">{selected.caption || selected.filename}</p>
             </motion.div>
           </motion.div>
