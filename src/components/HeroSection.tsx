@@ -19,6 +19,7 @@ const HeroSection = () => {
   }
 
   useEffect(() => {
+    document.title = "Котя и Зая";
     const interval = setInterval(() => setTime(getTimeSince()), 60000);
     return () => clearInterval(interval);
   }, []);
