@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Circle } from "lucide-react";
 
@@ -12,6 +13,12 @@ const PLANS = [
 ];
 
 const FinalSection = () => {
+  const [plans, setPlans] = useState(PLANS);
+
+  const togglePlan = (index: number) => {
+    setPlans(prev => prev.map((p, i) => i === index ? { ...p, completed: !p.completed } : p));
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -39,14 +46,15 @@ const FinalSection = () => {
           Наши планы 📝
         </motion.h3>
         <div className="flex flex-col gap-3">
-          {PLANS.map((plan, i) => (
+          {plans.map((plan, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className={`flex items-center gap-3 p-3 rounded-xl border backdrop-blur-sm transition-colors ${
+              onClick={() => togglePlan(i)}
+              className={`flex items-center gap-3 p-3 rounded-xl border backdrop-blur-sm transition-colors cursor-pointer select-none ${
                 plan.completed 
                   ? "bg-primary/10 border-primary/30" 
                   : "bg-white/5 border-white/10 hover:bg-white/10"
