@@ -1,40 +1,102 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Circle, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-// ✏️ ТУТ МОЖНО МЕНЯТЬ ВАШИ ПЛАНЫ
-const PLANS = [
-  { text: "Найти друг друга в этом огромном мире", completed: true },
-  { text: "Понять, что мы — одно целое", completed: true },
-  { text: "Пережить расстояние", completed: false }, // false - значит еще не выполнено (пустой кружок)
-  { text: "Обнять тебя крепко-крепко", completed: false },
-  { text: "Построить наш уютный дом", completed: false },
-  { text: "Быть счастливыми вечно", completed: true }, // Это мы уже выполняем :)
+// Стандартные планы (показываются, если не вошли в аккаунт)
+const DEFAULT_PLANS = [
+  { id: "1", text: "Найти друг друга в этом огромном мире", completed: true },
+  { id: "2", text: "Понять, что мы — одно целое", completed: true },
+  { id: "3", text: "Пережить расстояние", completed: false },
+  { id: "4", text: "Обнять тебя крепко-крепко", completed: false },
+  { id: "5", text: "Построить наш уютный дом", completed: false },
+  { id: "6", text: "Быть счастливыми вечно", completed: true },
 ];
 
+interface Plan {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 const FinalSection = () => {
-  const [plans, setPlans] = useState(() => {
-    const saved = localStorage.getItem("our_plans");
-    return saved ? JSON.parse(saved) : PLANS;
-  });
+  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [newPlan, setNewPlan] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem("our_plans", JSON.stringify(plans));
-  }, [plans]);
+    // Проверяем авторизацию и загружаем планы
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setUserId(data.session.user.id);
+        fetchPlans(data.session.user.id);
+      }
+    };
+    init();
 
-  const togglePlan = (index: number) => {
-    setPlans(prev => prev.map((p, i) => i === index ? { ...p, completed: !p.completed } : p));
+    const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+        fetchPlans(session.user.id);
+      } else {
+        setUserId(null);
+        setPlans(DEFAULT_PLANS);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const fetchPlans = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("plans")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    
+    if (error) console.error(error);
+    else if (data && data.length > 0) setPlans(data);
+    else setPlans([]); // Если в базе пусто, показываем пустой список (или можно DEFAULT_PLANS)
   };
 
-  const addPlan = () => {
+  const togglePlan = async (plan: Plan) => {
+    // Оптимистичное обновление (сразу меняем интерфейс)
+    const updated = { ...plan, completed: !plan.completed };
+    setPlans(prev => prev.map(p => p.id === plan.id ? updated : p));
+
+    if (userId) {
+      await supabase.from("plans").update({ completed: updated.completed }).eq("id", plan.id);
+    }
+  };
+
+  const addPlan = async () => {
     if (!newPlan.trim()) return;
-    setPlans(prev => [...prev, { text: newPlan.trim(), completed: false }]);
+    const text = newPlan.trim();
     setNewPlan("");
+
+    if (userId) {
+      const { data, error } = await supabase
+        .from("plans")
+        .insert([{ user_id: userId, text, completed: false }])
+        .select()
+        .single();
+      
+      if (error) {
+        alert("Ошибка сохранения");
+      } else if (data) {
+        setPlans(prev => [...prev, data]);
+      }
+    } else {
+      // Локально, если не вошли
+      setPlans(prev => [...prev, { id: Date.now().toString(), text, completed: false }]);
+    }
   };
 
-  const removePlan = (index: number) => {
-    setPlans(prev => prev.filter((_, i) => i !== index));
+  const removePlan = async (id: string) => {
+    setPlans(prev => prev.filter(p => p.id !== id));
+    if (userId) {
+      await supabase.from("plans").delete().eq("id", id);
+    }
   };
 
   const scrollToTop = () => {
@@ -64,14 +126,13 @@ const FinalSection = () => {
           Наши планы 📝
         </motion.h3>
         <div className="flex flex-col gap-3">
-          {plans.map((plan, i) => (
+          {plans.map((plan) => (
             <motion.div
-              key={i}
+              key={plan.id}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              onClick={() => togglePlan(i)}
+              onClick={() => togglePlan(plan)}
               className={`flex items-center gap-3 p-3 rounded-xl border backdrop-blur-sm transition-colors cursor-pointer select-none group ${
                 plan.completed 
                   ? "bg-primary/10 border-primary/30" 
@@ -85,7 +146,7 @@ const FinalSection = () => {
                 {plan.text}
               </span>
               <button 
-                onClick={(e) => { e.stopPropagation(); removePlan(i); }}
+                onClick={(e) => { e.stopPropagation(); removePlan(plan.id); }}
                 className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-red-400 transition-all"
               >
                 <Trash2 size={16} />
