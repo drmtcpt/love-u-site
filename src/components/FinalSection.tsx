@@ -23,6 +23,7 @@ const FinalSection = () => {
   const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [newPlan, setNewPlan] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     // Проверяем авторизацию и загружаем планы
@@ -70,9 +71,9 @@ const FinalSection = () => {
   };
 
   const addPlan = async () => {
-    if (!newPlan.trim()) return;
+    if (!newPlan.trim() || isAdding) return;
     const text = newPlan.trim();
-    setNewPlan("");
+    setIsAdding(true);
 
     if (userId) {
       const { data, error } = await supabase
@@ -82,14 +83,19 @@ const FinalSection = () => {
         .single();
       
       if (error) {
-        alert("Ошибка сохранения");
+        console.error(error);
+        alert("Ошибка сохранения: " + (error.message || "Неизвестная ошибка"));
+        // Не очищаем поле ввода, чтобы можно было попробовать снова
       } else if (data) {
         setPlans(prev => [...prev, data]);
+        setNewPlan(""); // Очищаем только при успехе
       }
     } else {
       // Локально, если не вошли
       setPlans(prev => [...prev, { id: Date.now().toString(), text, completed: false }]);
+      setNewPlan("");
     }
+    setIsAdding(false);
   };
 
   const removePlan = async (id: string) => {
@@ -161,11 +167,13 @@ const FinalSection = () => {
               onChange={(e) => setNewPlan(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addPlan()}
               placeholder="Добавить новую мечту..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors text-white placeholder:text-white/30"
+              disabled={isAdding}
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors text-white placeholder:text-white/30 disabled:opacity-50"
             />
             <button 
               onClick={addPlan}
-              className="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-2 transition-colors text-white"
+              disabled={isAdding}
+              className="bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl p-2 transition-colors text-white disabled:opacity-50"
             >
               <Plus size={20} />
             </button>
