@@ -27,6 +27,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Страховка: если Supabase долго думает, убираем загрузку через 3 секунды
+    const timeout = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 3000);
+
     const getSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -58,24 +63,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         if (!mounted) return;
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        if (newSession?.user) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
-          if (mounted) setProfile(profileData);
-        } else {
-          if (mounted) setProfile(null);
+        try {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          if (newSession?.user) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', newSession.user.id)
+              .single();
+            if (mounted) setProfile(profileData);
+          } else {
+            if (mounted) setProfile(null);
+          }
+        } catch (error) {
+          console.error("Auth change error:", error);
+        } finally {
+          if (mounted) setLoading(false);
         }
-        if (mounted) setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       listener?.subscription.unsubscribe();
     };
   }, []);
