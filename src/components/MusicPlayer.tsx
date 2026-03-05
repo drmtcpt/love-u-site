@@ -44,11 +44,11 @@ const MusicPlayer = () => {
         list.sort((a, b) => b.name.localeCompare(a.name));
         const file = list[0];
         
-        const { data: signedUrl, error: signErr } = await supabase.storage
+        // Используем публичную ссылку, так как бакет теперь публичный
+        const { data: publicUrlData } = supabase.storage
           .from("Music")
-          .createSignedUrl(`shared/${file.name}`, 3600); // 1 hour expiration
-        if (signErr) throw signErr;
-        setAudioUrl(signedUrl.signedUrl);
+          .getPublicUrl(`shared/${file.name}`);
+        setAudioUrl(publicUrlData.publicUrl);
       } else {
         // fallback to public file
         setAudioUrl(`/music.mp3`);
@@ -78,7 +78,7 @@ const MusicPlayer = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!userId) return alert("Сначала войдите через галерею (email).");
+    if (!userId) return alert("Сначала войдите в аккаунт.");
     setLoading(true);
     try {
       const fileName = `${Date.now()}_${file.name}`;
@@ -87,12 +87,11 @@ const MusicPlayer = () => {
       if (error) throw error;
       
       // Сразу получаем ссылку на новый файл и включаем его
-      const { data: signedUrl, error: signErr } = await supabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from("Music")
-        .createSignedUrl(path, 3600);
-      if (signErr) throw signErr;
+        .getPublicUrl(path);
 
-      setAudioUrl(signedUrl.signedUrl);
+      setAudioUrl(publicUrlData.publicUrl);
       setPlaying(true); // Автоматически включаем новую песню
       alert("Музыка загружена.");
     } catch (err: unknown) {
