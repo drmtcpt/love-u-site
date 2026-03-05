@@ -42,14 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
 
-          if (currentSession?.user) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', currentSession.user.id)
-              .single();
-            if (mounted) setProfile(profileData);
-          }
+          // if (currentSession?.user) {
+          //   const { data: profileData } = await supabase
+          //     .from('profiles')
+          //     .select('*')
+          //     .eq('id', currentSession.user.id)
+          //     .single();
+          //   if (mounted) setProfile(profileData);
+          // }
         }
       } catch (error) {
         console.error("Error getting session:", error);
@@ -66,16 +66,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           setSession(newSession);
           setUser(newSession?.user ?? null);
-          if (newSession?.user) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', newSession.user.id)
-              .single();
-            if (mounted) setProfile(profileData);
-          } else {
-            if (mounted) setProfile(null);
-          }
+          // if (newSession?.user) {
+          //   const { data: profileData } = await supabase
+          //     .from('profiles')
+          //     .select('*')
+          //     .eq('id', newSession.user.id)
+          //     .single();
+          //   if (mounted) setProfile(profileData);
+          // } else {
+          //   if (mounted) setProfile(null);
+          // }
         } catch (error) {
           console.error("Auth change error:", error);
         } finally {

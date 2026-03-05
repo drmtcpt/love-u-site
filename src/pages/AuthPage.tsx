@@ -2,8 +2,14 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Heart } from 'lucide-react';
 
+// Карта для сопоставления имен пользователей с их email
+const USER_EMAIL_MAP: { [key: string]: string } = {
+  'Зая2009': 'zaya2009@our.love',
+  'Котя2007': 'kotya2007@our.love',
+};
+
 const AuthPage = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -13,13 +19,20 @@ const AuthPage = () => {
     setLoading(true);
     setError(null);
 
+    const email = USER_EMAIL_MAP[username];
+    if (!email) {
+      setError('Неверное имя пользователя');
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      setError(error.message);
+      setError('Неверный пароль или имя пользователя');
     }
     setLoading(false);
   };
@@ -45,10 +58,10 @@ const AuthPage = () => {
 
           <div className="space-y-4">
             <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Имя"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-colors text-white placeholder:text-white/30"
               required
             />
