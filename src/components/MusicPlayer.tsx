@@ -37,11 +37,19 @@ const MusicPlayer = () => {
     setLoading(true);
     try {
       // list files in shared Music folder
-      const { data: list, error: listErr } = await supabase.storage.from("Music").list("shared");
-      if (listErr) throw listErr;
+      // Используем from('Music'), так как в SQL мы создали бакет с ID 'Music'
+      const { data: list, error: listErr } = await supabase.storage.from("Music").list("shared", {
+        limit: 10,
+        offset: 0,
+        sortBy: { column: 'name', order: 'desc' },
+      });
+      
+      if (listErr) {
+        console.error("Error loading music list:", listErr);
+        throw listErr;
+      }
+
       if (list && list.length > 0) {
-        // Сортируем файлы, чтобы взять самый новый (по имени, так как оно начинается с timestamp)
-        list.sort((a, b) => b.name.localeCompare(a.name));
         const file = list[0];
         
         // Используем публичную ссылку, так как бакет теперь публичный
