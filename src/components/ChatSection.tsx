@@ -22,6 +22,9 @@ const ChatSection = () => {
     // Загружаем сообщения один раз при монтировании
     fetchMessages();
 
+    // Fallback: Poll for new messages every 3 seconds in case Realtime fails
+    const interval = setInterval(fetchMessages, 3000);
+
     // Подписываемся на канал один раз
     const channel = supabase.channel('chat-channel');
 
@@ -37,6 +40,7 @@ const ChatSection = () => {
     // Отписываемся при размонтировании компонента
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, []); // Пустой массив зависимостей, чтобы useEffect выполнился только один раз
 
@@ -50,7 +54,13 @@ const ChatSection = () => {
       .select('*, profiles(*)')
       .order('created_at', { ascending: true });
     if (error) console.error('Error fetching messages:', error);
-    else setMessages(data as Message[]);
+    else setMessages(prev => {
+      // Simple check to avoid unnecessary re-renders and scrolling
+      if (data && prev.length === data.length && prev[prev.length - 1]?.id === data[data.length - 1]?.id) {
+        return prev;
+      }
+      return data as Message[];
+    });
   };
 
   const fetchSingleMessage = async (id: number) => {
