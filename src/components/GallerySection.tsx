@@ -62,7 +62,8 @@ const GallerySection = () => {
     if (!event.target.files || event.target.files.length === 0 || !user) return;
     setUploading(true);
     const file = event.target.files[0];
-    const fileName = `${user.id}/${Date.now()}`;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('gallery')
@@ -103,13 +104,18 @@ const GallerySection = () => {
           {/* Кнопка загрузки */}
           <label className="aspect-square glass-effect rounded-2xl flex flex-col items-center justify-center text-muted-foreground hover:text-white hover:border-primary/50 border-2 border-dashed border-white/20 cursor-pointer transition-all">
             <ImagePlus size={48} />
-            <span className="mt-2 text-sm">{uploading ? 'Загрузка...' : 'Добавить фото'}</span>
-            <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+            <span className="mt-2 text-sm">{uploading ? 'Загрузка...' : 'Добавить фото/видео'}</span>
+            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
           </label>
 
           {posts.map((post) => (
             <div key={post.id} className="group relative aspect-square glass-effect rounded-2xl overflow-hidden">
-              <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
+              {/\.(mp4|webm|ogg|mov)$/i.test(post.image_url) ? (
+                <video src={post.image_url} className="w-full h-full object-cover" controls />
+              ) : (
+                <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
+              )}
+              
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

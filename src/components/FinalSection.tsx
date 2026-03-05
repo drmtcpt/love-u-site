@@ -31,7 +31,7 @@ const FinalSection = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setUserId(data.session.user.id);
-        fetchPlans(data.session.user.id);
+        fetchPlans();
       }
     };
     init();
@@ -39,7 +39,7 @@ const FinalSection = () => {
     const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
       if (session?.user) {
         setUserId(session.user.id);
-        fetchPlans(session.user.id);
+        fetchPlans();
       } else {
         setUserId(null);
         setPlans(DEFAULT_PLANS);
@@ -48,11 +48,10 @@ const FinalSection = () => {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const fetchPlans = async (uid: string) => {
+  const fetchPlans = async () => {
     const { data, error } = await supabase
       .from("plans")
       .select("*")
-      .eq("user_id", uid)
       .order("created_at", { ascending: true });
     
     if (error) console.error(error);

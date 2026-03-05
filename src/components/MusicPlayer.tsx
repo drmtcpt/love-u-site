@@ -14,14 +14,14 @@ const MusicPlayer = () => {
       const { data } = await supabase.auth.getSession();
       const id = data.session?.user?.id ?? null;
       setUserId(id);
-      if (id) await loadUserMusic(id);
+      if (id) await loadSharedMusic();
     };
     init();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
       const id = session?.user?.id ?? null;
       setUserId(id);
-      if (id) loadUserMusic(id);
+      if (id) loadSharedMusic();
       else setAudioUrl(null);
     });
     return () => sub.subscription.unsubscribe();
@@ -33,11 +33,11 @@ const MusicPlayer = () => {
     }
   }, [audioUrl]);
 
-  const loadUserMusic = async (id: string) => {
+  const loadSharedMusic = async () => {
     setLoading(true);
     try {
-      // list files in user's Music folder
-      const { data: list, error: listErr } = await supabase.storage.from("Music").list(id);
+      // list files in shared Music folder
+      const { data: list, error: listErr } = await supabase.storage.from("Music").list("shared");
       if (listErr) throw listErr;
       if (list && list.length > 0) {
         // Сортируем файлы, чтобы взять самый новый (по имени, так как оно начинается с timestamp)
@@ -46,7 +46,7 @@ const MusicPlayer = () => {
         
         const { data: signedUrl, error: signErr } = await supabase.storage
           .from("Music")
-          .createSignedUrl(`${id}/${file.name}`, 3600); // 1 hour expiration
+          .createSignedUrl(`shared/${file.name}`, 3600); // 1 hour expiration
         if (signErr) throw signErr;
         setAudioUrl(signedUrl.signedUrl);
       } else {
@@ -82,7 +82,7 @@ const MusicPlayer = () => {
     setLoading(true);
     try {
       const fileName = `${Date.now()}_${file.name}`;
-      const path = `${userId}/${fileName}`;
+      const path = `shared/${fileName}`;
       const { error } = await supabase.storage.from("Music").upload(path, file, { upsert: true });
       if (error) throw error;
       
