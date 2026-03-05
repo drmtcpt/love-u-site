@@ -71,7 +71,7 @@ const GallerySection = () => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      alert('Ошибка загрузки фото.');
+      alert('Ошибка загрузки фото: ' + uploadError.message);
       setUploading(false);
       return;
     }
@@ -80,9 +80,14 @@ const GallerySection = () => {
       .from('gallery')
       .getPublicUrl(fileName);
 
-    await supabase
+    const { error: dbError } = await supabase
       .from('posts')
       .insert({ user_id: user.id, image_url: publicUrlData.publicUrl });
+    
+    if (dbError) {
+      console.error('DB Error:', dbError);
+      alert('Ошибка сохранения в базу: ' + dbError.message);
+    }
     
     fetchPosts();
     setUploading(false);

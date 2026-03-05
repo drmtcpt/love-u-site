@@ -14,7 +14,7 @@ interface Message {
 }
 
 const ChatSection = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -74,11 +74,18 @@ const ChatSection = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !profile) return;
-    await supabase
+    if (!newMessage.trim() || !user) return;
+    
+    const { error } = await supabase
       .from('chat_messages')
-      .insert({ content: newMessage, user_id: profile.id });
-    setNewMessage('');
+      .insert({ content: newMessage, user_id: user.id });
+      
+    if (error) {
+      console.error("Ошибка отправки:", error);
+      alert("Не удалось отправить: " + error.message);
+    } else {
+      setNewMessage('');
+    }
   };
 
   const handleRecord = async () => {
@@ -98,7 +105,7 @@ const ChatSection = () => {
       };
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const fileName = `${profile?.id}_${Date.now()}.webm`;
+        const fileName = `${user?.id}_${Date.now()}.webm`;
         const { data, error } = await supabase.storage
           .from('voice_messages')
           .upload(fileName, audioBlob);
@@ -111,7 +118,7 @@ const ChatSection = () => {
           .getPublicUrl(data.path);
         
         await supabase.from('chat_messages').insert({
-          user_id: profile!.id,
+          user_id: user!.id,
           audio_url: publicUrlData.publicUrl,
         });
         stream.getTracks().forEach(track => track.stop());
