@@ -2,12 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
-import { Send, Mic } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 interface Message {
   id: number;
   content: string | null;
-  audio_url: string | null;
   created_at: string;
   user_id: string;
   profiles: Profile | null;
@@ -17,9 +16,6 @@ const ChatSection = () => {
   const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,7 +61,10 @@ const ChatSection = () => {
       .single();
     if (error) console.error('Error fetching single message:', error);
     else {
-      setMessages((prev) => [...prev, data as Message]);
+      setMessages((prev) => {
+        if (prev.some(msg => msg.id === data.id)) return prev;
+        return [...prev, data as Message];
+      });
       // Показываем уведомление, если вкладка не активна
       if (document.hidden) {
         new Notification('Новое сообщение!', {
@@ -89,46 +88,6 @@ const ChatSection = () => {
     } else {
       setNewMessage('');
       fetchMessages(); // Refresh immediately
-    }
-  };
-
-  const handleRecord = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-    } else {
-      if (Notification.permission !== 'granted') {
-        await Notification.requestPermission();
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const fileName = `${user?.id}_${Date.now()}.webm`;
-        const { data, error } = await supabase.storage
-          .from('voice_messages')
-          .upload(fileName, audioBlob);
-        if (error) {
-          console.error('Error uploading audio:', error);
-          return;
-        }
-        const { data: publicUrlData } = supabase.storage
-          .from('voice_messages')
-          .getPublicUrl(data.path);
-        
-        await supabase.from('chat_messages').insert({
-          user_id: user!.id,
-          audio_url: publicUrlData.publicUrl,
-        });
-        stream.getTracks().forEach(track => track.stop());
-      };
-      mediaRecorder.start();
-      setIsRecording(true);
     }
   };
 
@@ -162,7 +121,6 @@ const ChatSection = () => {
                 }`}
               >
                 {msg.content && <p className="text-sm">{msg.content}</p>}
-                {msg.audio_url && <audio src={msg.audio_url} controls className="w-full h-10" />}
                 <p className="text-xs opacity-60 mt-1 text-right">
                   {new Date(msg.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -180,14 +138,6 @@ const ChatSection = () => {
             placeholder="Напиши что-нибудь..."
             className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
-          <button
-            onClick={handleRecord}
-            className={`p-3 rounded-xl transition-colors ${
-              isRecording ? 'bg-red-500/50 text-red-200' : 'bg-white/10 hover:bg-white/20'
-            }`}
-          >
-            <Mic size={20} />
-          </button>
           <button
             onClick={handleSendMessage}
             className="bg-primary/80 hover:bg-primary p-3 rounded-xl transition-colors"

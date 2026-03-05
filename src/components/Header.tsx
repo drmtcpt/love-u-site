@@ -6,7 +6,16 @@ const Header = () => {
   const { profile, logout } = useAuth();
 
   if (!profile) {
-    return null;
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 pointer-events-none">
+        <div className="max-w-7xl mx-auto flex justify-end pointer-events-auto">
+          <Link to="/login" className="glass-effect flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold hover:bg-white/10 transition-colors">
+            <LogIn size={18} />
+            Войти
+          </Link>
+        </div>
+      </header>
+    );
   }
 
   return (
