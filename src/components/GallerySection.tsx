@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus, Trash2 } from 'lucide-react';
 
 interface Post {
   id: number;
   image_url: string;
   user_id: string;
+  caption?: string;
 }
 
 const GallerySection = () => {
   const { profile, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [caption, setCaption] = useState('');
 
   useEffect(() => {
     fetchPosts();
@@ -35,6 +37,7 @@ const GallerySection = () => {
     const file = event.target.files[0];
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
+    const currentCaption = caption; // Capture current caption
 
     const { error: uploadError } = await supabase.storage
       .from('gallery')
@@ -53,7 +56,7 @@ const GallerySection = () => {
 
     const { error: dbError } = await supabase
       .from('posts')
-      .insert({ user_id: user.id, image_url: publicUrlData.publicUrl });
+      .insert({ user_id: user.id, image_url: publicUrlData.publicUrl, caption: currentCaption });
     
     if (dbError) {
       console.error('DB Error:', dbError);
@@ -62,6 +65,15 @@ const GallerySection = () => {
     
     fetchPosts();
     setUploading(false);
+    setCaption(''); // Clear caption after upload
+  };
+
+  const handleDelete = async (postId: number, imageUrl: string) => {
+    if (!user) return;
+    
+    // Удаляем запись из базы
+    await supabase.from('posts').delete().match({ id: postId, user_id: user.id });
+    fetchPosts();
   };
 
   return (
@@ -78,11 +90,20 @@ const GallerySection = () => {
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* Кнопка загрузки */}
-          <label className="aspect-square glass-effect rounded-2xl flex flex-col items-center justify-center text-muted-foreground hover:text-white hover:border-primary/50 border-2 border-dashed border-white/20 cursor-pointer transition-all">
-            <ImagePlus size={48} />
-            <span className="mt-2 text-sm">{uploading ? 'Загрузка...' : 'Добавить фото/видео'}</span>
-            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-          </label>
+          <div className="aspect-square glass-effect rounded-2xl flex flex-col items-center justify-center p-4 gap-2 border-2 border-dashed border-white/20">
+            <input
+              type="text"
+              placeholder="Подпись..."
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:border-primary/50"
+            />
+            <label className="flex flex-col items-center cursor-pointer text-muted-foreground hover:text-white transition-colors">
+              <ImagePlus size={32} />
+              <span className="mt-1 text-xs">{uploading ? 'Загрузка...' : 'Загрузить'}</span>
+              <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+            </label>
+          </div>
 
           {posts.map((post) => (
             <div key={post.id} className="group relative aspect-square glass-effect rounded-2xl overflow-hidden">
@@ -91,6 +112,20 @@ const GallerySection = () => {
               ) : (
                 <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
               )}
+              
+              {/* Overlay with caption and delete button */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                <p className="text-white text-xs text-center line-clamp-3">{post.caption}</p>
+                
+                {user && user.id === post.user_id && (
+                  <button
+                    onClick={() => handleDelete(post.id, post.image_url)}
+                    className="self-end text-white/70 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
