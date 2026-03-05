@@ -9,7 +9,6 @@ import FinalSection from "@/components/FinalSection";
 import MusicPlayer from "@/components/MusicPlayer";
 import StarryBackground from "@/components/StarryBackground";
 import Header from "@/components/Header";
-import ChatSection from "@/components/ChatSection";
 
 const Index = () => {
   return (
@@ -23,7 +22,6 @@ const Index = () => {
       <LoveStorySection />
       <GallerySection />
       <MapSection />
-      <ChatSection />
       <LoveJarSection />
       <BouquetSection />
       

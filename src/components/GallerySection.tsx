@@ -2,60 +2,31 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
-import { Heart, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 
 interface Post {
   id: number;
   image_url: string;
   user_id: string;
-  profiles: Profile | null;
-  likes: { count: number }[];
 }
 
 const GallerySection = () => {
   const { profile, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [userLikes, setUserLikes] = useState<number[]>([]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchPosts();
-    if (user) fetchUserLikes(user.id);
-  }, [user]);
+  }, []);
 
   const fetchPosts = async () => {
     const { data, error } = await supabase
       .from('posts')
-      .select('*, profiles(username, avatar_url), likes(count)')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) console.error('Error fetching posts:', error);
     else setPosts(data as any);
-  };
-
-  const fetchUserLikes = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('likes')
-      .select('post_id')
-      .eq('user_id', userId);
-    if (error) console.error('Error fetching user likes:', error);
-    else setUserLikes(data.map(like => like.post_id));
-  };
-
-  const handleLike = async (postId: number) => {
-    if (!user) return;
-    const hasLiked = userLikes.includes(postId);
-
-    if (hasLiked) {
-      // Unlike
-      await supabase.from('likes').delete().match({ post_id: postId, user_id: user.id });
-      setUserLikes(userLikes.filter(id => id !== postId));
-    } else {
-      // Like
-      await supabase.from('likes').insert({ post_id: postId, user_id: user.id });
-      setUserLikes([...userLikes, postId]);
-    }
-    fetchPosts(); // Refresh posts to get new like count
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,25 +91,6 @@ const GallerySection = () => {
               ) : (
                 <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
               )}
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <img src={post.profiles?.avatar_url} alt="author" className="w-6 h-6 rounded-full" />
-                    <span className="text-xs font-bold">{post.profiles?.username}</span>
-                  </div>
-                  <button
-                    onClick={() => handleLike(post.id)}
-                    className="flex items-center gap-1.5 text-xs bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full"
-                  >
-                    <Heart
-                      size={14}
-                      className={userLikes.includes(post.id) ? 'text-red-500 fill-current' : ''}
-                    />
-                    {post.likes[0]?.count || 0}
-                  </button>
-                </div>
-              </div>
             </div>
           ))}
         </div>
