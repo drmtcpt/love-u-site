@@ -105,15 +105,30 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('gallery', 'gallery', tru
 INSERT INTO storage.buckets (id, name, public) VALUES ('Music', 'Music', true) ON CONFLICT (id) DO UPDATE SET public = true;
 INSERT INTO storage.buckets (id, name, public) VALUES ('voice_messages', 'voice_messages', true) ON CONFLICT (id) DO UPDATE SET public = true;
 
+-- Сносим старые политики хранилища
+DROP POLICY IF EXISTS "Public Access Gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access Music" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access Voice" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload Gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload Music" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload Voice" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated uploads to photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated downloads from photos" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated to read Music" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated uploads to Music" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload to Gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload to Music" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated Upload to Voice" ON storage.objects;
+
 -- Разрешаем ВСЕМ (даже без входа) смотреть файлы (чтобы плеер и картинки работали)
 CREATE POLICY "Public Access Gallery" ON storage.objects FOR SELECT USING (bucket_id = 'gallery');
 CREATE POLICY "Public Access Music" ON storage.objects FOR SELECT USING (bucket_id = 'Music');
 CREATE POLICY "Public Access Voice" ON storage.objects FOR SELECT USING (bucket_id = 'voice_messages');
 
 -- Разрешаем АВТОРИЗОВАННЫМ загружать файлы
-CREATE POLICY "Authenticated Upload to Gallery" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'gallery');
-CREATE POLICY "Authenticated Upload to Music" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'Music');
-CREATE POLICY "Authenticated Upload to Voice" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'voice_messages');
+CREATE POLICY "Authenticated Upload to Gallery" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'gallery' AND auth.uid() IS NOT NULL);
+CREATE POLICY "Authenticated Upload to Music" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'Music' AND auth.uid() IS NOT NULL);
+CREATE POLICY "Authenticated Upload to Voice" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'voice_messages' AND auth.uid() IS NOT NULL);
 
 -- 6. REALTIME: Включаем для чата, чтобы сообщения приходили мгновенно.
 DO $$
