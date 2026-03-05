@@ -104,7 +104,7 @@ const CalendarSection = () => {
     }
     // Дни месяца
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayEvents = getEventsForDate(dateStr);
       const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
       const isSelected = selectedDate === dateStr;
