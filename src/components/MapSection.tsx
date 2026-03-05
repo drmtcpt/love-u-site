@@ -40,6 +40,26 @@ const MapSection = () => {
 
     if (!canvasRef.current) return;
 
+    const canvas = canvasRef.current;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const y = e.touches[0].clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const radius = rect.width / 2;
+      
+      const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+      
+      if (distance < radius) {
+        e.preventDefault();
+      }
+    };
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+
     const globe = createGlobe(canvasRef.current, {
       devicePixelRatio: 2,
       width: width * 2,
@@ -68,6 +88,7 @@ const MapSection = () => {
     return () => {
       globe.destroy();
       window.removeEventListener('resize', onResize);
+      canvas.removeEventListener('touchstart', onTouchStart);
     };
   }, []);
 
@@ -85,7 +106,7 @@ const MapSection = () => {
       <div className="relative max-w-lg mx-auto aspect-square flex items-center justify-center">
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height: '100%', maxWidth: 600, maxHeight: 600, touchAction: 'none' }}
+          style={{ width: '100%', height: '100%', maxWidth: 600, maxHeight: 600 }}
           className="cursor-grab active:cursor-grabbing opacity-90 hover:opacity-100 transition-opacity"
           onClick={() => setShowInfo(!showInfo)}
           onPointerDown={(e) => {
