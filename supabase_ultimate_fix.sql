@@ -50,9 +50,11 @@ DROP POLICY IF EXISTS "Insert plans" ON public.plans;
 DROP POLICY IF EXISTS "Users can update own plans" ON public.plans;
 DROP POLICY IF EXISTS "Authenticated users can update all plans" ON public.plans;
 DROP POLICY IF EXISTS "Update plans" ON public.plans;
+DROP POLICY IF EXISTS "Update any plan" ON public.plans;
 DROP POLICY IF EXISTS "Users can delete own plans" ON public.plans;
 DROP POLICY IF EXISTS "Authenticated users can delete all plans" ON public.plans;
 DROP POLICY IF EXISTS "Delete plans" ON public.plans;
+DROP POLICY IF EXISTS "Delete any plan" ON public.plans;
 DROP POLICY IF EXISTS "Users can view own calendar_events" ON public.calendar_events;
 DROP POLICY IF EXISTS "Authenticated users can view all calendar events" ON public.calendar_events;
 DROP POLICY IF EXISTS "View all events" ON public.calendar_events;
@@ -60,9 +62,11 @@ DROP POLICY IF EXISTS "Users can insert own calendar_events" ON public.calendar_
 DROP POLICY IF EXISTS "Insert events" ON public.calendar_events;
 DROP POLICY IF EXISTS "Users can update own calendar_events" ON public.calendar_events;
 DROP POLICY IF EXISTS "Update events" ON public.calendar_events;
+DROP POLICY IF EXISTS "Update any event" ON public.calendar_events;
 DROP POLICY IF EXISTS "Users can delete own calendar_events" ON public.calendar_events;
 DROP POLICY IF EXISTS "Authenticated users can delete any calendar event" ON public.calendar_events;
 DROP POLICY IF EXISTS "Delete events" ON public.calendar_events;
+DROP POLICY IF EXISTS "Delete any event" ON public.calendar_events;
 
 -- 4. Создаем НОВЫЕ, РАБОЧИЕ политики
 
