@@ -77,7 +77,7 @@ const ChatSection = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user) return alert("Пожалуйста, войдите в аккаунт, чтобы писать сообщения.");
     
     const { error } = await supabase
       .from('chat_messages')

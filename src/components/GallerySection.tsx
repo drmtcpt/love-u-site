@@ -59,7 +59,7 @@ const GallerySection = () => {
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0 || !user) return;
+    if (!event.target.files || event.target.files.length === 0 || !user) return alert("Пожалуйста, войдите в аккаунт, чтобы загружать фото.");
     setUploading(true);
     const file = event.target.files[0];
     const fileExt = file.name.split('.').pop();

@@ -1,5 +1,6 @@
 -- c:\Users\Ali\Desktop\Love u\supabase_ultimate_fix.sql
 -- This is the definitive script to fix all permission and data sharing issues.
+-- This is the definitive script to fix all permission and data sharing issues.
 
 -- 1. Создаем профили для ВСЕХ существующих пользователей, у которых их нет.
 -- Это критически важно для работы чата и галереи.
