@@ -23,23 +23,26 @@ const ChatSection = () => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Загружаем сообщения один раз при монтировании
     fetchMessages();
-    const subscription = supabase
-      .channel('chat-channel')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
-        (payload) => {
-          // Fetch the new message with profile data
-          fetchSingleMessage(payload.new.id);
-        }
-      )
-      .subscribe();
 
+    // Подписываемся на канал один раз
+    const channel = supabase.channel('chat-channel');
+
+    channel.on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      (payload) => {
+        // Fetch the new message with profile data
+        fetchSingleMessage(payload.new.id);
+      }
+    ).subscribe();
+
+    // Отписываемся при размонтировании компонента
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, []); // Пустой массив зависимостей, чтобы useEffect выполнился только один раз
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
