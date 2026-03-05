@@ -65,7 +65,7 @@ const CalendarSection = () => {
   };
 
   const addEvent = async () => {
-    if (!newEventTitle.trim() || !selectedDate || !userId) return;
+    if (!newEventTitle.trim() || !selectedDate || !userId) return alert("Пожалуйста, войдите в аккаунт, чтобы добавлять события.");
     setLoading(true);
     const { data, error } = await supabase
       .from("calendar_events")

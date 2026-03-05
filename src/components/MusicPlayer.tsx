@@ -38,7 +38,7 @@ const MusicPlayer = () => {
     try {
       // list files in shared Music folder
       // Используем from('Music'), так как в SQL мы создали бакет с ID 'Music'
-      const { data: list, error: listErr } = await supabase.storage.from("Music").list("", { // Ищем в корне бакета
+      const { data: list, error: listErr } = await supabase.storage.from("Music").list("", {
         limit: 10,
         offset: 0,
         sortBy: { column: 'name', order: 'desc' },
@@ -90,7 +90,7 @@ const MusicPlayer = () => {
     setLoading(true);
     try {
       const fileName = `${Date.now()}_${file.name}`;
-      const path = fileName; // Загружаем в корень
+      const path = fileName;
       const { error } = await supabase.storage.from("Music").upload(path, file, { upsert: true });
       if (error) throw error;
       

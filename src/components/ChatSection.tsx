@@ -23,28 +23,26 @@ const ChatSection = () => {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Загружаем сообщения один раз при монтировании
     fetchMessages();
 
-    const channel = supabase
-      .channel('public:chat_messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-        },
-        (payload) => {
-          console.log('New message received:', payload);
-          fetchSingleMessage(payload.new.id);
-        }
-      )
-      .subscribe();
+    // Подписываемся на канал один раз
+    const channel = supabase.channel('chat-channel');
 
+    channel.on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      (payload) => {
+        // Fetch the new message with profile data
+        fetchSingleMessage(payload.new.id);
+      }
+    ).subscribe();
+
+    // Отписываемся при размонтировании компонента
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, []); // Пустой массив зависимостей, чтобы useEffect выполнился только один раз
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,9 +54,7 @@ const ChatSection = () => {
       .select('*, profiles(*)')
       .order('created_at', { ascending: true });
     if (error) console.error('Error fetching messages:', error);
-    else {
-      setMessages(data as Message[]);
-    }
+    else setMessages(data as Message[]);
   };
 
   const fetchSingleMessage = async (id: number) => {
@@ -67,12 +63,7 @@ const ChatSection = () => {
       .select('*, profiles(*)')
       .eq('id', id)
       .single();
-    
-    if (error) {
-      console.error('Error fetching single message:', error);
-      // Если не удалось загрузить одно сообщение, перезагружаем все
-      fetchMessages();
-    }
+    if (error) console.error('Error fetching single message:', error);
     else {
       setMessages((prev) => [...prev, data as Message]);
       // Показываем уведомление, если вкладка не активна
@@ -97,6 +88,7 @@ const ChatSection = () => {
       alert("Не удалось отправить: " + error.message);
     } else {
       setNewMessage('');
+      fetchMessages(); // Refresh immediately
     }
   };
 

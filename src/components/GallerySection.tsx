@@ -63,7 +63,7 @@ const GallerySection = () => {
     setUploading(true);
     const file = event.target.files[0];
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`; // Упрощаем имя файла, чтобы избежать проблем с папками
+    const fileName = `${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('gallery')
