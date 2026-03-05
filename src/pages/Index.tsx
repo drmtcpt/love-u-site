@@ -1,25 +1,31 @@
-import StarryBackground from "@/components/StarryBackground";
 import HeroSection from "@/components/HeroSection";
+import LoveStorySection from "@/components/LoveStorySection";
 import GallerySection from "@/components/GallerySection";
 import MapSection from "@/components/MapSection";
-import LoveStorySection from "@/components/LoveStorySection";
 import LoveJarSection from "@/components/LoveJarSection";
 import BouquetSection from "@/components/BouquetSection";
+import CalendarSection from "@/components/CalendarSection"; // 1. Импортируем календарь
 import FinalSection from "@/components/FinalSection";
 import MusicPlayer from "@/components/MusicPlayer";
+import StarryBackground from "@/components/StarryBackground";
 
 const Index = () => {
   return (
-    <div className="relative min-h-screen cosmic-gradient overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <StarryBackground />
+      <MusicPlayer />
+      
+      {/* Порядок секций на сайте: */}
       <HeroSection />
+      <LoveStorySection />
       <GallerySection />
       <MapSection />
-      <LoveStorySection />
       <LoveJarSection />
       <BouquetSection />
+      
+      <CalendarSection /> {/* 2. Вставляем календарь перед финалом */}
+      
       <FinalSection />
-      <MusicPlayer />
     </div>
   );
 };
