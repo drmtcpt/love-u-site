@@ -39,7 +39,7 @@ const CalendarSection = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         setUserId(data.session.user.id);
-        fetchEvents();
+        fetchEvents(data.session.user.id); // Передаем ID, но функция его не использует (это нормально для общего календаря)
       }
     };
     init();
@@ -47,7 +47,7 @@ const CalendarSection = () => {
     const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
       if (session?.user) {
         setUserId(session.user.id);
-        fetchEvents();
+        fetchEvents(session.user.id);
       } else {
         setUserId(null);
         setEvents([]);
@@ -56,7 +56,7 @@ const CalendarSection = () => {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (uid?: string) => {
     const { data, error } = await supabase
       .from("calendar_events")
       .select("*");
