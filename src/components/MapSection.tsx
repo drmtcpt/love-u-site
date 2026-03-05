@@ -85,30 +85,21 @@ const MapSection = () => {
       <div className="relative max-w-lg mx-auto aspect-square flex items-center justify-center">
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height: '100%', maxWidth: 600, maxHeight: 600 }}
+          style={{ width: '100%', height: '100%', maxWidth: 600, maxHeight: 600, touchAction: 'none' }}
           className="cursor-grab active:cursor-grabbing opacity-90 hover:opacity-100 transition-opacity"
           onClick={() => setShowInfo(!showInfo)}
           onPointerDown={(e) => {
             pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
             if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing';
+            (e.target as Element).setPointerCapture(e.pointerId);
           }}
           onPointerUp={() => {
             pointerInteracting.current = null;
             if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
           }}
-          onPointerOut={() => {
-            pointerInteracting.current = null;
-            if (canvasRef.current) canvasRef.current.style.cursor = 'grab';
-          }}
-          onMouseMove={(e) => {
+          onPointerMove={(e) => {
             if (pointerInteracting.current !== null) {
               const delta = e.clientX - pointerInteracting.current;
-              pointerInteractionMovement.current = delta;
-            }
-          }}
-          onTouchMove={(e) => {
-            if (pointerInteracting.current !== null && e.touches[0]) {
-              const delta = e.touches[0].clientX - pointerInteracting.current;
               pointerInteractionMovement.current = delta;
             }
           }}
