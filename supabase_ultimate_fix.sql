@@ -45,6 +45,7 @@ DROP POLICY IF EXISTS "Insert own messages" ON public.chat_messages;
 DROP POLICY IF EXISTS "Delete own messages" ON public.chat_messages;
 DROP POLICY IF EXISTS "Users can view own plans" ON public.plans;
 DROP POLICY IF EXISTS "Authenticated users can view all plans" ON public.plans;
+DROP POLICY IF EXISTS "View all plans" ON public.plans;
 DROP POLICY IF EXISTS "Users can insert own plans" ON public.plans;
 DROP POLICY IF EXISTS "Insert plans" ON public.plans;
 DROP POLICY IF EXISTS "Users can update own plans" ON public.plans;
