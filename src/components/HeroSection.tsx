@@ -35,7 +35,12 @@ const HeroSection = () => {
   };
 
   const scrollToStory = () => {
-    document.getElementById("love-story")?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById("love-story");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    } else {
+      console.warn("Element with id 'love-story' not found");
+    }
   };
 
   return (
