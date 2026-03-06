@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
-import { ImagePlus, Trash2, X, Check } from 'lucide-react';
+import { ImagePlus, Trash2, X } from 'lucide-react';
 
 interface Post {
   id: number;
@@ -17,8 +17,6 @@ const GallerySection = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState('');
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
@@ -43,17 +41,10 @@ const GallerySection = () => {
     else setPosts(data as any);
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0 || !user) return alert("Пожалуйста, войдите в аккаунт, чтобы загружать фото.");
-    const file = event.target.files[0];
-    setPreviewFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const handleUpload = async () => {
-    if (!previewFile || !user) return;
     setUploading(true);
-    const file = previewFile;
+    const file = event.target.files[0];
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const currentCaption = caption;
@@ -85,14 +76,6 @@ const GallerySection = () => {
     fetchPosts();
     setUploading(false);
     setCaption(''); // Clear caption after upload
-    setPreviewFile(null);
-    setPreviewUrl(null);
-  };
-
-  const cancelUpload = () => {
-    setPreviewFile(null);
-    setPreviewUrl(null);
-    setCaption('');
   };
 
   const handleDelete = async (postId: number, imageUrl: string) => {
@@ -123,48 +106,19 @@ const GallerySection = () => {
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* Кнопка загрузки */}
-          <div className="aspect-square glass-effect rounded-2xl flex flex-col items-center justify-center p-4 gap-2 border-2 border-dashed border-white/20 relative overflow-hidden">
-            {previewUrl ? (
-              <>
-                {previewFile?.type.startsWith('video/') ? (
-                  <video src={previewUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                ) : (
-                  <img src={previewUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                )}
-                
-                <div className="z-10 flex flex-col items-center w-full gap-2 mt-auto">
-                  <input
-                    type="text"
-                    placeholder="Подпись..."
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    className="w-full bg-black/60 border border-white/30 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:border-primary/50 text-white placeholder:text-white/50"
-                  />
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={handleUpload} 
-                      disabled={uploading}
-                      className="bg-primary hover:bg-primary/80 p-2 rounded-full text-white transition-colors disabled:opacity-50"
-                    >
-                      <Check size={20} />
-                    </button>
-                    <button 
-                      onClick={cancelUpload}
-                      disabled={uploading}
-                      className="bg-red-500/80 hover:bg-red-500 p-2 rounded-full text-white transition-colors disabled:opacity-50"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <label className="flex flex-col items-center cursor-pointer text-muted-foreground hover:text-white transition-colors w-full h-full justify-center">
-                <ImagePlus size={32} />
-                <span className="mt-1 text-xs">Загрузить</span>
-                <input type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
-              </label>
-            )}
+          <div className="aspect-square glass-effect rounded-2xl flex flex-col items-center justify-center p-4 gap-2 border-2 border-dashed border-white/20">
+            <input
+              type="text"
+              placeholder="Подпись..."
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:border-primary/50 text-white placeholder:text-white/50"
+            />
+            <label className="flex flex-col items-center cursor-pointer text-muted-foreground hover:text-white transition-colors">
+              <ImagePlus size={32} />
+              <span className="mt-1 text-xs">{uploading ? 'Загрузка...' : 'Загрузить'}</span>
+              <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+            </label>
           </div>
 
           {posts.map((post) => (
