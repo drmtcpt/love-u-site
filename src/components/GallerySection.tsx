@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { useAuth, Profile } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ImagePlus, Trash2, X } from 'lucide-react';
 
 interface Post {
@@ -136,20 +136,16 @@ const GallerySection = () => {
           ))}
         </div>
 
-        <AnimatePresence>
-          {selectedPost && (
-            createPortal(
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[99999] bg-black flex items-center justify-center p-4"
+        {selectedPost && createPortal(
+            <div
+              className="fixed inset-0 bg-black flex items-center justify-center p-4"
+              style={{ zIndex: 99999 }}
               onClick={() => setSelectedPost(null)}
             >
               {/* Кнопка закрытия (крестик) - в правом верхнем углу экрана */}
               <button
                 onClick={() => setSelectedPost(null)}
-                className="absolute top-6 right-6 z-50 text-white/70 hover:text-white transition-colors p-3 bg-white/10 rounded-full hover:bg-white/20"
+                className="absolute top-6 right-6 z-50 text-white hover:text-gray-300 transition-colors p-3 bg-black/50 rounded-full"
               >
                 <X size={32} />
               </button>
@@ -164,21 +160,21 @@ const GallerySection = () => {
                       setSelectedPost(null);
                     }
                   }}
-                  className="absolute top-6 left-6 z-50 text-white/70 hover:text-red-400 transition-colors p-3 bg-white/10 rounded-full hover:bg-white/20"
+                  className="absolute top-6 left-6 z-50 text-red-500 hover:text-red-400 transition-colors p-3 bg-black/50 rounded-full"
                 >
                   <Trash2 size={32} />
                 </button>
               )}
 
               <div 
-                className="relative max-w-5xl w-full flex flex-col items-center justify-center"
+                className="relative max-w-full max-h-full flex flex-col items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative w-fit mx-auto">
                   {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
                     <video 
                       src={selectedPost.image_url} 
-                      className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" 
+                      className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" 
                       controls 
                       autoPlay 
                       playsInline
@@ -187,21 +183,19 @@ const GallerySection = () => {
                     <img 
                       src={selectedPost.image_url} 
                       alt="moment" 
-                      className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                      className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" 
                     />
                   )}
                 </div>
                 {selectedPost.caption && (
-                  <p className="mt-6 text-white/90 text-center font-display text-xl bg-black/40 px-6 py-2 rounded-full backdrop-blur-md">
+                  <p className="mt-4 text-white/90 text-center font-display text-xl bg-black/40 px-6 py-2 rounded-full backdrop-blur-md">
                     {selectedPost.caption}
                   </p>
                 )}
               </div>
-            </motion.div>,
+            </div>,
             document.body
-            )
-          )}
-        </AnimatePresence>
+        )}
       </div>
     </section>
   );
