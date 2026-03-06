@@ -190,47 +190,49 @@ const GallerySection = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedPost(null)}
-              className="fixed inset-0 !z-[9999] bg-black flex items-center justify-center p-4"
+              className="fixed inset-0 !z-[9999] bg-black/95 flex items-center justify-center p-4"
             >
               <div 
-                className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center justify-center"
+                className="relative max-w-5xl w-full flex flex-col items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Кнопка закрытия (крестик) - в правом верхнем углу контента */}
-                <button
-                  onClick={() => setSelectedPost(null)}
-                  className="absolute -top-10 right-0 sm:top-4 sm:right-4 z-50 text-white/70 hover:text-white transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
-                >
-                  <X size={24} />
-                </button>
-
-                {/* Кнопка удаления (мусорка) - в левом верхнем углу контента, если это пост текущего пользователя */}
-                {user && (
+                <div className="relative">
+                  {/* Кнопка закрытия (крестик) - в правом верхнем углу контента */}
                   <button
-                    onClick={() => {
-                      handleDelete(selectedPost.id, selectedPost.image_url);
-                      setSelectedPost(null);
-                    }}
-                    className="absolute -top-10 left-0 sm:top-4 sm:left-4 z-50 text-white/70 hover:text-red-400 transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+                    onClick={() => setSelectedPost(null)}
+                    className="absolute top-2 right-2 z-50 text-white/70 hover:text-white transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
                   >
-                    <Trash2 size={24} />
+                    <X size={24} />
                   </button>
-                )}
 
-                {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
-                  <video 
-                    src={selectedPost.image_url} 
-                    className="max-w-full max-h-[80vh] rounded-lg shadow-2xl relative" 
-                    controls 
-                    autoPlay 
-                  />
-                ) : (
-                  <img 
-                    src={selectedPost.image_url} 
-                    alt="moment" 
-                    className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl relative" 
-                  />
-                )}
+                  {/* Кнопка удаления (мусорка) - в левом верхнем углу контента, если это пост текущего пользователя */}
+                  {user && (
+                    <button
+                      onClick={() => {
+                        handleDelete(selectedPost.id, selectedPost.image_url);
+                        setSelectedPost(null);
+                      }}
+                      className="absolute top-2 left-2 z-50 text-white/70 hover:text-red-400 transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+                    >
+                      <Trash2 size={24} />
+                    </button>
+                  )}
+
+                  {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
+                    <video 
+                      src={selectedPost.image_url} 
+                      className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" 
+                      controls 
+                      autoPlay 
+                    />
+                  ) : (
+                    <img 
+                      src={selectedPost.image_url} 
+                      alt="moment" 
+                      className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                    />
+                  )}
+                </div>
                 {selectedPost.caption && (
                   <p className="mt-6 text-white/90 text-center font-display text-xl bg-black/40 px-6 py-2 rounded-full backdrop-blur-md">
                     {selectedPost.caption}
