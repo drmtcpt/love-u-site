@@ -147,32 +147,33 @@ const GallerySection = () => {
               className="fixed inset-0 bg-black/95 flex items-center justify-center p-4"
               style={{ zIndex: 9999 }}
             >
+              {/* Кнопка закрытия (крестик) - в правом верхнем углу экрана */}
+              <button
+                onClick={() => setSelectedPost(null)}
+                className="absolute top-4 right-4 z-50 text-white/70 hover:text-white transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+              >
+                <X size={24} />
+              </button>
+
+              {/* Кнопка удаления (мусорка) - в левом верхнем углу экрана */}
+              {user && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(selectedPost.id, selectedPost.image_url);
+                    setSelectedPost(null);
+                  }}
+                  className="absolute top-4 left-4 z-50 text-white/70 hover:text-red-400 transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+                >
+                  <Trash2 size={24} />
+                </button>
+              )}
+
               <div 
                 className="relative max-w-5xl w-full flex flex-col items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative w-fit mx-auto">
-                  {/* Кнопка закрытия (крестик) - в правом верхнем углу контента */}
-                  <button
-                    onClick={() => setSelectedPost(null)}
-                    className="absolute top-2 right-2 z-50 text-white/70 hover:text-white transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
-                  >
-                    <X size={24} />
-                  </button>
-
-                  {/* Кнопка удаления (мусорка) - в левом верхнем углу контента, если это пост текущего пользователя */}
-                  {user && (
-                    <button
-                      onClick={() => {
-                        handleDelete(selectedPost.id, selectedPost.image_url);
-                        setSelectedPost(null);
-                      }}
-                      className="absolute top-2 left-2 z-50 text-white/70 hover:text-red-400 transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
-                    >
-                      <Trash2 size={24} />
-                    </button>
-                  )}
-
                   {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
                     <video 
                       src={selectedPost.image_url} 
