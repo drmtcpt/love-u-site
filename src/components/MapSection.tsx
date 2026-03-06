@@ -93,7 +93,7 @@ const MapSection = () => {
   }, []);
 
   return (
-    <section className="relative z-10 py-20 px-4 overflow-hidden">
+    <section className="relative z-0 py-20 px-4 overflow-hidden">
       <motion.h2
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
