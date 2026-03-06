@@ -190,13 +190,14 @@ const GallerySection = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedPost(null)}
-              className="fixed inset-0 !z-[9999] bg-black/95 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/95 flex items-center justify-center p-4"
+              style={{ zIndex: 9999 }}
             >
               <div 
                 className="relative max-w-5xl w-full flex flex-col items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="relative">
+                <div className="relative w-fit mx-auto">
                   {/* Кнопка закрытия (крестик) - в правом верхнем углу контента */}
                   <button
                     onClick={() => setSelectedPost(null)}
@@ -224,6 +225,7 @@ const GallerySection = () => {
                       className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" 
                       controls 
                       autoPlay 
+                      playsInline
                     />
                   ) : (
                     <img 
