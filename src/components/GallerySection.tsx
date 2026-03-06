@@ -65,7 +65,7 @@ const GallerySection = () => {
 
     const { error: uploadError } = await supabase.storage
       .from('gallery')
-      .upload(fileName, file);
+      .upload(fileName, previewFile);
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
@@ -80,7 +80,7 @@ const GallerySection = () => {
 
     const { error: dbError } = await supabase
       .from('posts')
-      .insert({ user_id: user.id, image_url: publicUrlData.publicUrl, caption: currentCaption });
+      .insert({ user_id: user.id, image_url: publicUrlData.publicUrl, caption: caption });
     
     if (dbError) {
       console.error('DB Error:', dbError);
