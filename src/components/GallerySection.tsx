@@ -174,24 +174,10 @@ const GallerySection = () => {
               onClick={() => setSelectedPost(post)}
             >
               {/\.(mp4|webm|ogg|mov)$/i.test(post.image_url) ? (
-                <video src={post.image_url} className="w-full h-full object-cover" controls />
+                <video src={post.image_url} className="w-full h-full object-cover" />
               ) : (
                 <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
               )}
-              
-              {/* Overlay with caption and delete button */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 transition-opacity flex-col justify-between p-3 hidden md:flex">
-                <p className="text-white text-xs text-center line-clamp-3">{post.caption}</p>
-                
-                {user && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(post.id, post.image_url); }}
-                    className="self-end text-white/70 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                )}
-              </div>
             </div>
           ))}
         </div>
@@ -204,7 +190,7 @@ const GallerySection = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedPost(null)}
-              className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4"
+              className="fixed inset-0 !z-[9999] bg-black flex items-center justify-center p-4"
             >
               <div 
                 className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center justify-center"
