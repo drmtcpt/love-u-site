@@ -78,7 +78,7 @@ CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USIN
 -- Галерея (Посты)
 CREATE POLICY "View all posts" ON public.posts FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Insert own posts" ON public.posts FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Delete own posts" ON public.posts FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Delete any posts" ON public.posts FOR DELETE TO authenticated USING (true);
 
 -- Лайки
 CREATE POLICY "View all likes" ON public.likes FOR SELECT TO authenticated USING (true);

@@ -80,8 +80,14 @@ const GallerySection = () => {
   const handleDelete = async (postId: number, imageUrl: string) => {
     if (!user) return;
     
-    // Удаляем запись из базы
-    await supabase.from('posts').delete().match({ id: postId, user_id: user.id });
+    // Удаляем запись из базы (теперь можно удалять любые посты, если ты авторизован)
+    const { error } = await supabase.from('posts').delete().eq('id', postId);
+    
+    if (error) {
+      console.error("Error deleting post:", error);
+      alert("Не удалось удалить фото: " + error.message);
+    }
+
     fetchPosts();
   };
 
