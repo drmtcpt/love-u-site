@@ -35,7 +35,7 @@ const HeroSection = () => {
   };
 
   const scrollToStory = () => {
-    document.getElementById("gallery")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("love-story")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (

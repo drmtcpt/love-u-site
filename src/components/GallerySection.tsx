@@ -153,7 +153,10 @@ const GallerySection = () => {
               className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
             >
               <button
-                onClick={() => setSelectedPost(null)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPost(null);
+                }}
                 className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 bg-white/10 rounded-full"
               >
                 <X size={24} />

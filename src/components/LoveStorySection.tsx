@@ -11,7 +11,7 @@ const phrases = [
 
 const LoveStorySection = () => {
   return (
-    <section className="relative z-10 py-20 px-4">
+    <section id="love-story" className="relative z-10 py-20 px-4">
       <motion.h2
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
