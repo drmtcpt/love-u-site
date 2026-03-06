@@ -51,7 +51,7 @@ const GallerySection = () => {
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0 || !user) return alert("Пожалуйста, войдите в аккаунт, чтобы загружать фото.");
+    if (!event.target.files || event.target.files.length === 0 || !user) return alert("Пожалуйста, войдите в аккаунт, чтобы загружать фото/видео.");
     const file = event.target.files[0];
     setPreviewFile(file);
     setPreviewUrl(URL.createObjectURL(file));
@@ -69,7 +69,7 @@ const GallerySection = () => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      alert('Ошибка загрузки фото: ' + uploadError.message);
+      alert('Ошибка загрузки файла: ' + uploadError.message);
       setUploading(false);
       return;
     }
@@ -108,7 +108,7 @@ const GallerySection = () => {
     
     if (error) {
       console.error("Error deleting post:", error);
-      alert("Не удалось удалить фото: " + error.message);
+      alert("Не удалось удалить файл: " + error.message);
     }
 
     fetchPosts();
@@ -178,7 +178,7 @@ const GallerySection = () => {
               className="group relative aspect-square glass-effect rounded-2xl overflow-hidden cursor-pointer"
               onClick={() => setSelectedPost(post)}
             >
-              {/\.(mp4|webm|ogg|mov)$/i.test(post.image_url) ? (
+              {/\.(mp4|webm|ogg|mov|avi|mkv|m4v)$/i.test(post.image_url) ? (
                 <video src={post.image_url} className="w-full h-full object-cover" />
               ) : (
                 <img src={post.image_url} alt="moment" className="w-full h-full object-cover" />
@@ -206,7 +206,7 @@ const GallerySection = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm('Удалить это фото?')) {
+                    if (confirm('Удалить этот файл?')) {
                       handleDelete(selectedPost.id, selectedPost.image_url);
                       setSelectedPost(null);
                     }
@@ -222,7 +222,7 @@ const GallerySection = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="relative w-fit mx-auto">
-                  {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
+                  {/\.(mp4|webm|ogg|mov|avi|mkv|m4v)$/i.test(selectedPost.image_url) ? (
                     <video 
                       src={selectedPost.image_url} 
                       className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" 
