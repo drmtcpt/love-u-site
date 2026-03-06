@@ -143,16 +143,15 @@ const GallerySection = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] bg-black flex items-center justify-center p-4"
               onClick={() => setSelectedPost(null)}
-              className="fixed inset-0 bg-black/95 flex items-center justify-center p-4"
-              style={{ zIndex: 9999 }}
             >
               {/* Кнопка закрытия (крестик) - в правом верхнем углу экрана */}
               <button
                 onClick={() => setSelectedPost(null)}
-                className="absolute top-4 right-4 z-50 text-white/70 hover:text-white transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+                className="absolute top-6 right-6 z-50 text-white/70 hover:text-white transition-colors p-3 bg-white/10 rounded-full hover:bg-white/20"
               >
-                <X size={24} />
+                <X size={32} />
               </button>
 
               {/* Кнопка удаления (мусорка) - в левом верхнем углу экрана */}
@@ -160,12 +159,14 @@ const GallerySection = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(selectedPost.id, selectedPost.image_url);
-                    setSelectedPost(null);
+                    if (confirm('Удалить это фото?')) {
+                      handleDelete(selectedPost.id, selectedPost.image_url);
+                      setSelectedPost(null);
+                    }
                   }}
-                  className="absolute top-4 left-4 z-50 text-white/70 hover:text-red-400 transition-colors p-2 bg-black/50 rounded-full hover:bg-black/70"
+                  className="absolute top-6 left-6 z-50 text-white/70 hover:text-red-400 transition-colors p-3 bg-white/10 rounded-full hover:bg-white/20"
                 >
-                  <Trash2 size={24} />
+                  <Trash2 size={32} />
                 </button>
               )}
 
