@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
-import { ImagePlus, Trash2 } from 'lucide-react';
+import { ImagePlus, Trash2, X } from 'lucide-react';
 
 interface Post {
   id: number;
@@ -16,6 +16,7 @@ const GallerySection = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState('');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -106,7 +107,11 @@ const GallerySection = () => {
           </div>
 
           {posts.map((post) => (
-            <div key={post.id} className="group relative aspect-square glass-effect rounded-2xl overflow-hidden">
+            <div 
+              key={post.id} 
+              className="group relative aspect-square glass-effect rounded-2xl overflow-hidden cursor-pointer"
+              onClick={() => setSelectedPost(post)}
+            >
               {/\.(mp4|webm|ogg|mov)$/i.test(post.image_url) ? (
                 <video src={post.image_url} className="w-full h-full object-cover" controls />
               ) : (
@@ -119,7 +124,7 @@ const GallerySection = () => {
                 
                 {user && user.id === post.user_id && (
                   <button
-                    onClick={() => handleDelete(post.id, post.image_url)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(post.id, post.image_url); }}
                     className="self-end text-white/70 hover:text-red-400 transition-colors"
                   >
                     <Trash2 size={18} />
@@ -129,6 +134,50 @@ const GallerySection = () => {
             </div>
           ))}
         </div>
+
+        <AnimatePresence>
+          {selectedPost && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedPost(null)}
+              className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+            >
+              <button
+                onClick={() => setSelectedPost(null)}
+                className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 bg-white/10 rounded-full"
+              >
+                <X size={24} />
+              </button>
+              
+              <div 
+                className="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/\.(mp4|webm|ogg|mov)$/i.test(selectedPost.image_url) ? (
+                  <video 
+                    src={selectedPost.image_url} 
+                    className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" 
+                    controls 
+                    autoPlay 
+                  />
+                ) : (
+                  <img 
+                    src={selectedPost.image_url} 
+                    alt="moment" 
+                    className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                  />
+                )}
+                {selectedPost.caption && (
+                  <p className="mt-6 text-white/90 text-center font-display text-xl bg-black/40 px-6 py-2 rounded-full backdrop-blur-md">
+                    {selectedPost.caption}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
