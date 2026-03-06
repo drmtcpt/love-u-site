@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth, Profile } from '@/contexts/AuthContext';
@@ -197,6 +198,7 @@ const GallerySection = () => {
 
         <AnimatePresence>
           {selectedPost && (
+            createPortal(
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -249,7 +251,9 @@ const GallerySection = () => {
                   </p>
                 )}
               </div>
-            </motion.div>
+            </motion.div>,
+            document.body
+            )
           )}
         </AnimatePresence>
       </div>
