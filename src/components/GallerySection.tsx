@@ -130,7 +130,7 @@ const GallerySection = () => {
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
                 <p className="text-white text-xs text-center line-clamp-3">{post.caption}</p>
                 
-                {user && user.id === post.user_id && (
+                {user && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(post.id, post.image_url); }}
                     className="self-end text-white/70 hover:text-red-400 transition-colors"
@@ -165,7 +165,7 @@ const GallerySection = () => {
                 </button>
 
                 {/* Кнопка удаления (мусорка) - в левом верхнем углу контента, если это пост текущего пользователя */}
-                {user && user.id === selectedPost.user_id && (
+                {user && (
                   <button
                     onClick={() => {
                       handleDelete(selectedPost.id, selectedPost.image_url);
