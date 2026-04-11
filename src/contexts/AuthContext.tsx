@@ -13,7 +13,6 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  login: (name: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
 }
 
@@ -92,26 +91,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const login = async (name: string) => {
-    const authMap: Record<string, string> = {
-      'Зая2009': 'zaya@love.com',
-      'Котя2007': 'kotya@love.com'
-    };
-
-    const email = authMap[name];
-    
-    if (!email) {
-      return { error: { message: 'Неверное имя (это и есть твой пароль)' } };
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: 'special_password_123',
-    });
-
-    return { error };
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     setSession(null);
@@ -124,7 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     profile,
     loading,
-    login,
     logout,
   };
 
